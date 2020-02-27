@@ -1,0 +1,9 @@
+name: roam_research_download
+channels:
+    - conda-forge
+dependencies:
+    - python=3.6
+    - pip
+    -   pip:
+            - pyppeteer==0.0.25
+            - gitpython==3.1.*

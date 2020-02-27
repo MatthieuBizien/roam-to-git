@@ -1,3 +1,5 @@
 logs
 notes
 downloads
+venv/
+**.pyc

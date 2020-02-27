@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-import argparse
 import asyncio
+import datetime
+import json
 import os
+import tempfile
+import zipfile
 from pathlib import Path
 
-from pyppeteer import launch
+import git
+import pyppeteer.browser
 
 
 def patch_pyppeteer():
@@ -33,38 +37,28 @@ async def get_text(page, b, norm=True):
     return text
 
 
-async def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("output_type", help="Download JSON or Markdown")
-    parser.add_argument("--devtools", action="store_true",
-                        help="Should we open Chrome")
-    parser.add_argument("--sleep_duration", type=float, default=0.1,
-                        help="How many seconds to wait after the clicks")
-    parser.add_argument("--download_duration", type=float, default=10,
-                        help="How many seconds to before to close the browser when the "
-                             "download is started")
-    parser.add_argument("--slow_motion", type=float, default=10,
-                        help="Slow motion in Pyppeter")
-    parser.add_argument("--output_directory", default=str(Path.home() / "Downloads"),
-                        help="Directory where to stock the outputs")
-    args = parser.parse_args()
+async def download_rr_archive(output_type: str,
+                              output_directory: Path,
+                              devtools=False,
+                              sleep_duration=0.1,
+                              slow_motion=10):
+    """Download an archive in RoamResearch.
 
-    output_type = args.output_type
-    sleep_duration = args.sleep_duration
-    download_duration = args.download_duration
-    slow_motion = args.slow_motion
-    devtools = args.devtools
-    output_directory = args.output_directory
-
+    :param output_type: Download JSON or Markdown
+    :param output_directory: Directory where to stock the outputs
+    :param devtools: Should we open Chrome
+    :param sleep_duration: How many seconds to wait after the clicks
+    :param slow_motion: How many seconds to before to close the browser when the download is started
+    """
     print("Creating browser")
-    browser = await launch(devtools=devtools, slowMo=slow_motion)
+    browser = await pyppeteer.launch(devtools=devtools, slowMo=slow_motion)
     document = await browser.newPage()
 
     if not devtools:
         print("Configure downloads to", output_directory)
         cdp = await document.target.createCDPSession()
         await cdp.send('Page.setDownloadBehavior',
-                       {'behavior': 'allow', 'downloadPath': output_directory})
+                       {'behavior': 'allow', 'downloadPath': str(output_directory)})
 
     print("Opening signin page")
     await document.goto('https://roamresearch.com/#/signin')
@@ -104,11 +98,11 @@ async def main():
     await asyncio.sleep(sleep_duration)
 
     async def get_dropdown_button():
-        button = await document.querySelector(".bp3-button-text")
-        button_text = await get_text(document, button)
-        assert button_text in ["markdown",
-                               "json"], button_text  # defensive check
-        return button, button_text
+        dropdown_button = await document.querySelector(".bp3-button-text")
+        dropdown_button_text = await get_text(document, dropdown_button)
+        # Defensive check if the interface change
+        assert dropdown_button_text in ["markdown", "json"], dropdown_button_text
+        return dropdown_button, dropdown_button_text
 
     print("Checking download type")
     button, button_text = await get_dropdown_button()
@@ -130,12 +124,102 @@ async def main():
     export_all_confirm, = [b for b in buttons if await get_text(document, b) == 'export all']
     await export_all_confirm.click()
 
-    print("Waiting for the download to finish")
-    await asyncio.sleep(download_duration)
-
-    print("Closing the browser")
+    # Wait for download to finish
+    if devtools:
+        # No way to check because download location is not specified
+        return
+    for _ in range(1000):
+        await asyncio.sleep(0.1)
+        for file in output_directory.iterdir():
+            if file.name.endswith(".zip"):
+                print("File", file, "found")
+                await asyncio.sleep(1)
+                await browser.close()
+                return
     await browser.close()
+    raise FileNotFoundError(f"Impossible to download {output_type} in {output_directory}")
+
+
+def get_zip_path(zip_dir_path: Path) -> Path:
+    """Return the path to the single zip file in a directory, and fail if there is not one single
+    zip file"""
+    zip_dir_path = list(zip_dir_path.iterdir())
+    zips_in_dir = [f for f in zip_dir_path if f.name.endswith(".zip")]
+    assert len(zips_in_dir) == 1, (zips_in_dir, zip_dir_path)
+    zip_path, = zips_in_dir
+    return zip_path
+
+
+def reset_git_directory(git_path: Path):
+    """Remove all files in a git directory"""
+    for file in git_path.glob("**"):
+        if not file.is_file():
+            continue
+        if ".git" in file.parts:
+            continue
+        file.unlink()
+
+
+def unzip_markdown_archive(zip_dir_path: Path, git_path: Path):
+    zip_path = get_zip_path(zip_dir_path)
+    with zipfile.ZipFile(zip_path) as zip_file:
+        files = [f.filename for f in zip_file.infolist() if f.file_size > 0]
+        zip_file.extractall(git_path, files)
+
+
+def unzip_json_archive(zip_dir_path: Path, git_path: Path):
+    zip_path = get_zip_path(zip_dir_path)
+    with zipfile.ZipFile(zip_path) as zip_file:
+        files = list(zip_file.namelist())
+        for file in files:
+            assert file.endswith(".json")
+            content = json.loads(zip_file.read(file).decode())
+            with open(git_path / file, "w") as f:
+                json.dump(content, f, sort_keys=True, indent=2, ensure_ascii=False)
+
+
+def fix_file_chmod(git_path: Path, target_mode=755):
+    for file in git_path.glob("**"):
+        if not file.is_file():
+            continue
+        if ".git" in file.parts:
+            continue
+        file.chmod(target_mode)
+
+
+def commit_git_directory(git_path: Path):
+    """Add an automatic commit in a git directory if it has changed, and push it"""
+    repo = git.Repo(git_path)
+    assert not repo.bare
+    if not repo.is_dirty() and not repo.untracked_files:
+        # No change, nothing to do
+        return
+    print("Committing in", git_path)
+    repo.git.add(A=True)  # https://github.com/gitpython-developers/GitPython/issues/292
+    repo.index.commit(f"Automatic commit {datetime.datetime.now().isoformat()}")
+
+    print("Pushing to origin")
+    origin = repo.remote(name='origin')
+    origin.push()
+
+
+def main():
+    git_path = Path(__file__).parent / "notes"  # FIXME use argparse
+
+    with tempfile.TemporaryDirectory() as markdown_zip_path, \
+            tempfile.TemporaryDirectory() as json_zip_path:
+        markdown_zip_path = Path(markdown_zip_path)
+        json_zip_path = Path(json_zip_path)
+
+        tasks = [download_rr_archive("markdown", markdown_zip_path),
+                 download_rr_archive("json", json_zip_path)]
+        asyncio.get_event_loop().run_until_complete(asyncio.gather(*tasks))
+
+        reset_git_directory(git_path)
+        unzip_markdown_archive(markdown_zip_path, git_path)
+        unzip_json_archive(json_zip_path, git_path)
+        commit_git_directory(git_path)
 
 
 if __name__ == "__main__":
-    asyncio.get_event_loop().run_until_complete(main())
+    main()
