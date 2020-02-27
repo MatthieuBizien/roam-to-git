@@ -11,6 +11,7 @@ from pathlib import Path
 
 import git
 import pyppeteer.browser
+from dotenv import load_dotenv
 
 
 def patch_pyppeteer():
@@ -175,7 +176,7 @@ def unzip_json_archive(zip_dir_path: Path, git_path: Path):
             assert file.endswith(".json")
             content = json.loads(zip_file.read(file).decode())
             with open(git_path / file, "w") as f:
-                json.dump(content, f, sort_keys=True, indent=2, ensure_ascii=False)
+                json.dump(content, f, sort_keys=True, indent=2, ensure_ascii=True)
 
 
 def fix_file_chmod(git_path: Path, target_mode=755):
@@ -204,6 +205,8 @@ def commit_git_directory(git_path: Path):
 
 
 def main():
+    load_dotenv()
+
     git_path = Path(__file__).parent / "notes"  # FIXME use argparse
 
     with tempfile.TemporaryDirectory() as markdown_zip_path, \

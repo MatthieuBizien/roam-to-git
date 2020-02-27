@@ -3,3 +3,4 @@ notes
 downloads
 venv/
 **.pyc
+.env
