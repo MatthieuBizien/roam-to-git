@@ -5,6 +5,7 @@ import asyncio
 import datetime
 import json
 import os
+import re
 import tempfile
 import zipfile
 from pathlib import Path
@@ -41,7 +42,7 @@ async def get_text(page, b, norm=True):
 async def download_rr_archive(output_type: str,
                               output_directory: Path,
                               devtools=False,
-                              sleep_duration=0.1,
+                              sleep_duration=1.,
                               slow_motion=10):
     """Download an archive in RoamResearch.
 
@@ -161,11 +162,25 @@ def reset_git_directory(git_path: Path):
         file.unlink()
 
 
+def format_link(string: str) -> str:
+    """Transform a RoamResearch-like link to a Markdown link."""
+    # Regex are read-only and can't parse [[[[recursive]] [[links]]]], but they do the job.
+    # We use a special syntax for links that can have SPACES in them
+    return re.sub(r"\[\[([^\]]+)\]\]", r"[\1](<\1.md>)", string)
+
+
 def unzip_markdown_archive(zip_dir_path: Path, git_path: Path):
     zip_path = get_zip_path(zip_dir_path)
     with zipfile.ZipFile(zip_path) as zip_file:
         files = [f.filename for f in zip_file.infolist() if f.file_size > 0]
-        zip_file.extractall(git_path, files)
+        for fname in files:
+            content = zip_file.read(fname).decode()
+            content = format_link(content)
+            dest = (git_path / fname)
+            # We have to specify encoding because crontab on Mac don't use UTF-8
+            # https://stackoverflow.com/questions/11735363/python3-unicodeencodeerror-crontab
+            with dest.open("w", encoding="utf-8") as f:
+                f.write(content)
 
 
 def unzip_json_archive(zip_dir_path: Path, git_path: Path):

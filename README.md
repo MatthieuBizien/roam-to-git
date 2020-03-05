@@ -48,7 +48,7 @@ One-liner to run it with a [cron](https://en.wikipedia.org/wiki/Cron) every hour
 - [x] Create Cron
 - [x] Write detailed README
 - [x] Publish the repository on Github
-- [ ] Format `[[links]]` to be compatible with Github markdown
+- [x] Format `[[links]]` to be compatible with Github markdown
 - [ ] Format `#links` to be compatible with Github markdown
 - [ ] Format `{{TODO}}` to be compatible with Github markdown
 - [ ] Add backlinks (so keep all notes, even empty?)
