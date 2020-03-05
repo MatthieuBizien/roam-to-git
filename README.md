@@ -1,6 +1,6 @@
 # Automatic RoamResearch backup
 
-This script help you backup your [RoamResearch](roamresearch.com)!
+This script help you backup your [RoamResearch](https://roamresearch.com/)!
 
 This script automatically
 - Download a markdown archive of your RoamResearch workspace
@@ -42,12 +42,27 @@ One-liner to run it with a [cron](https://en.wikipedia.org/wiki/Cron) every hour
 
 # Task list
 
+## Backup
+
 - [x] Download automatically from RoamResearch
-- [x] Push it to Github
 - [x] Create Cron
 - [x] Write detailed README
 - [x] Publish the repository on Github
-- [ ] Format Markdown notes to be more readable on Github
-- [ ] Add backlinks
+- [ ] Format `[[links]]` to be compatible with Github markdown
+- [ ] Format `#links` to be compatible with Github markdown
+- [ ] Format `{{TODO}}` to be compatible with Github markdown
+- [ ] Add backlinks (so keep all notes, even empty?)
+- [ ] Download images (they currently visible in Github, but not in the archive so not saved in the repository 😕)
+
+## Make it for others
+- [x] Push it to Github
+- [ ] Add example repository
+- [ ] Make the backup directory configurable
+- [ ] Add it to Pypi
+
+## Add features
 - [ ] Add automatic Google Keep retrieval
 
+## Some ideas, I don't need it, but PR welcome 😀
+- [ ] Test it/make it work on Windows
+- [ ] Pre-configure a CI server so it can run every hour without a computer
