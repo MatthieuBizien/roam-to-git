@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# coding: utf-8
 
 import asyncio
 import datetime
@@ -8,7 +7,9 @@ import os
 import re
 import tempfile
 import zipfile
+from collections import defaultdict
 from pathlib import Path
+from typing import List, Match, Tuple, Dict
 
 import git
 import pyppeteer.browser
@@ -162,6 +163,18 @@ def reset_git_directory(git_path: Path):
         file.unlink()
 
 
+def extract_links(string: str) -> List[Match]:
+    return list(re.finditer(r"\[\[([^\]]+)\]\]", string))
+
+
+def add_backward_links(content: str, back_links: List[Tuple[str, Match]]) -> str:
+    if not back_links:
+        return content
+    files = sorted(set(file_name[:-3] for file_name, matches in back_links))
+    backlinks_str = "\n".join(f"- [{e}](<{e}.md>)" for e in files)
+    return f"{content}\n# Backlinks\n{backlinks_str}\n"
+
+
 def format_link(string: str) -> str:
     """Transform a RoamResearch-like link to a Markdown link."""
     # Regex are read-only and can't parse [[[[recursive]] [[links]]]], but they do the job.
@@ -172,15 +185,29 @@ def format_link(string: str) -> str:
 def unzip_markdown_archive(zip_dir_path: Path, git_path: Path):
     zip_path = get_zip_path(zip_dir_path)
     with zipfile.ZipFile(zip_path) as zip_file:
-        files = [f.filename for f in zip_file.infolist() if f.file_size > 0]
-        for fname in files:
-            content = zip_file.read(fname).decode()
-            content = format_link(content)
-            dest = (git_path / fname)
-            # We have to specify encoding because crontab on Mac don't use UTF-8
-            # https://stackoverflow.com/questions/11735363/python3-unicodeencodeerror-crontab
-            with dest.open("w", encoding="utf-8") as f:
-                f.write(content)
+        contents = {file.filename: zip_file.read(file.filename).decode()
+                    for file in zip_file.infolist()
+                    if not file.is_dir()}
+
+    # Extract backlinks from the markdown
+    forward_links = {file_name: extract_links(content) for file_name, content in contents.items()}
+    back_links: Dict[str, List[Tuple[str, Match]]] = defaultdict(list)
+    for file_name, links in forward_links.items():
+        for link in links:
+            back_links[f"{link.group(1)}.md"].append((file_name, link))
+
+    # Format and write the markdown files
+    for file_name, content in contents.items():
+        content = add_backward_links(content, back_links[file_name])
+        content = format_link(content)
+        dest = (git_path / file_name)
+        if len(content) == 0:
+            continue
+        dest.parent.mkdir(parents=True, exist_ok=True)  # Needed if a new directory is used
+        # We have to specify encoding because crontab on Mac don't use UTF-8
+        # https://stackoverflow.com/questions/11735363/python3-unicodeencodeerror-crontab
+        with dest.open("w", encoding="utf-8") as f:
+            f.write(content)
 
 
 def unzip_json_archive(zip_dir_path: Path, git_path: Path):

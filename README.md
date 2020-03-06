@@ -58,7 +58,7 @@ One-liner to run it with a [cron](https://en.wikipedia.org/wiki/Cron) every hour
 - [ ] Format `[[ [[link 1]] [[link 2]] ]]` to be compatible with Github markdown
 
 ### Backlink formatting
-- [ ] Add backlinks reference to the notes files
+- [x] Add backlinks reference to the notes files
 - [ ] Integrate the context into the backlink
 - [ ] Manage `/` in file names
 
