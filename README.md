@@ -42,17 +42,28 @@ One-liner to run it with a [cron](https://en.wikipedia.org/wiki/Cron) every hour
 
 # Task list
 
-## Backup
+## Backup all RoamResearch data
 
 - [x] Download automatically from RoamResearch
 - [x] Create Cron
 - [x] Write detailed README
 - [x] Publish the repository on Github
+- [ ] Download images (they currently visible in Github, but not in the archive so not saved in the repository 😕)
+
+## Format the backup to have a good UI
+
+### Link formatting
 - [x] Format `[[links]]` to be compatible with Github markdown
 - [ ] Format `#links` to be compatible with Github markdown
+- [ ] Format `[[ [[link 1]] [[link 2]] ]]` to be compatible with Github markdown
+
+### Backlink formatting
+- [ ] Add backlinks reference to the notes files
+- [ ] Integrate the context into the backlink
+- [ ] Manage `/` in file names
+
+### Other formatting
 - [ ] Format `{{TODO}}` to be compatible with Github markdown
-- [ ] Add backlinks (so keep all notes, even empty?)
-- [ ] Download images (they currently visible in Github, but not in the archive so not saved in the repository 😕)
 
 ## Make it for others
 - [x] Push it to Github
