@@ -194,15 +194,6 @@ def unzip_json_archive(zip_dir_path: Path, git_path: Path):
                 json.dump(content, f, sort_keys=True, indent=2, ensure_ascii=True)
 
 
-def fix_file_chmod(git_path: Path, target_mode=755):
-    for file in git_path.glob("**"):
-        if not file.is_file():
-            continue
-        if ".git" in file.parts:
-            continue
-        file.chmod(target_mode)
-
-
 def commit_git_directory(git_path: Path):
     """Add an automatic commit in a git directory if it has changed, and push it"""
     repo = git.Repo(git_path)
