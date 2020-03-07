@@ -63,7 +63,7 @@ One-liner to run it with a [cron](https://en.wikipedia.org/wiki/Cron) every hour
 - [ ] Manage `/` in file names
 
 ### Other formatting
-- [ ] Format `{{TODO}}` to be compatible with Github markdown
+- [w] Format `{{TODO}}` to be compatible with Github markdown
 
 ## Make it for others
 - [x] Push it to Github

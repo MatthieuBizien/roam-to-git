@@ -2,7 +2,24 @@
 import unittest
 from typing import List
 
-from rr_download import format_link, extract_links
+from rr_download import format_link, extract_links, format_to_do
+
+
+class TestFormatTodo(unittest.TestCase):
+    def test_empty(self):
+        self.assertEquals(format_to_do(""), "")
+
+    def test_no_link(self):
+        self.assertEquals(format_to_do("string"), "string")
+
+    def test_to_do(self):
+        self.assertEquals(format_to_do("a\n- {{[[TODO]]}}string"), "a\n- [ ] string")
+
+    def test_done(self):
+        self.assertEquals(format_to_do("a\n- {{[[DONE]]}}string"), "a\n- [x] string")
+
+    def test_something_else(self):
+        self.assertEquals(format_to_do("a\n- {{[[ZZZ]]}}string"), "a\n- {{[[ZZZ]]}}string")
 
 
 class TestFormatLinks(unittest.TestCase):

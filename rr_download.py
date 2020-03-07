@@ -163,6 +163,12 @@ def reset_git_directory(git_path: Path):
         file.unlink()
 
 
+def format_to_do(contents: str):
+    contents = re.sub(r"{{\[\[TODO\]\]}} *", r"[ ] ", contents)
+    contents = re.sub(r"{{\[\[DONE\]\]}} *", r"[x] ", contents)
+    return contents
+
+
 def extract_links(string: str) -> List[Match]:
     return list(re.finditer(r"\[\[([^\]]+)\]\]", string))
 
@@ -198,6 +204,7 @@ def unzip_markdown_archive(zip_dir_path: Path, git_path: Path):
 
     # Format and write the markdown files
     for file_name, content in contents.items():
+        content = format_to_do(content)
         content = add_backward_links(content, back_links[file_name])
         content = format_link(content)
         dest = (git_path / file_name)
