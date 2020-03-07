@@ -4,3 +4,4 @@ downloads
 venv/
 **.pyc
 .env
+.mypy_cache/

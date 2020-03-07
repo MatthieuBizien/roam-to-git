@@ -92,6 +92,7 @@ async def download_rr_archive(output_type: str,
             await asyncio.sleep(sleep_duration)
         else:
             break
+    assert dot_button is not None
     await dot_button.click()
 
     print("Launch popup")
@@ -146,10 +147,10 @@ async def download_rr_archive(output_type: str,
 def get_zip_path(zip_dir_path: Path) -> Path:
     """Return the path to the single zip file in a directory, and fail if there is not one single
     zip file"""
-    zip_dir_path = list(zip_dir_path.iterdir())
-    zips_in_dir = [f for f in zip_dir_path if f.name.endswith(".zip")]
-    assert len(zips_in_dir) == 1, (zips_in_dir, zip_dir_path)
-    zip_path, = zips_in_dir
+    zip_files = list(zip_dir_path.iterdir())
+    zip_files = [f for f in zip_files if f.name.endswith(".zip")]
+    assert len(zip_files) == 1, (zip_files, zip_dir_path)
+    zip_path, = zip_files
     return zip_path
 
 
