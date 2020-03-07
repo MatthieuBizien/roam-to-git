@@ -52,18 +52,19 @@ One-liner to run it with a [cron](https://en.wikipedia.org/wiki/Cron) every hour
 
 ## Format the backup to have a good UI
 
-### Link formatting
-- [x] Format `[[links]]` to be compatible with Github markdown
-- [ ] Format `#links` to be compatible with Github markdown
-- [ ] Format `[[ [[link 1]] [[link 2]] ]]` to be compatible with Github markdown
+### Link formatting to be compatible with Github markdown
+- [x] Format `[[links]]`
+- [ ] Format `#links`
+- [ ] Format `[[ [[link 1]] [[link 2]] ]]` 
+- [ ] Format `((link))`
 
 ### Backlink formatting
 - [x] Add backlinks reference to the notes files
-- [ ] Integrate the context into the backlink
+- [x] Integrate the context into the backlink
 - [ ] Manage `/` in file names
 
 ### Other formatting
-- [w] Format `{{TODO}}` to be compatible with Github markdown
+- [w] Format `{{TODO}}` to beun compatible with Github markdown
 
 ## Make it for others
 - [x] Push it to Github

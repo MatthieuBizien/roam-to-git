@@ -8,6 +8,7 @@ import re
 import tempfile
 import zipfile
 from collections import defaultdict
+from itertools import takewhile
 from pathlib import Path
 from typing import List, Match, Tuple, Dict
 
@@ -175,10 +176,26 @@ def extract_links(string: str) -> List[Match]:
 
 
 def add_backward_links(content: str, back_links: List[Tuple[str, Match]]) -> str:
+    global start_context, middle_context, end_context
     if not back_links:
         return content
-    files = sorted(set(file_name[:-3] for file_name, matches in back_links))
-    backlinks_str = "\n".join(f"- [{e}](<{e}.md>)" for e in files)
+    files = sorted(set((file_name[:-3], match) for file_name, match in back_links),
+                   key=lambda e: (e[0], e[1].start()))
+    new_lines = []
+    for file, match in files:
+        new_lines.append(f"## [{file}](<{file}.md>)")
+
+        start_context = list(takewhile(lambda c: c != "\n", match.string[:match.start()][::-1]))
+        start_context = "".join(start_context[::-1])
+
+        middle_context = match.string[match.start():match.end()]
+
+        end_context = takewhile(lambda c: c != "\n", match.string[match.end()])
+        end_context = "".join(end_context)
+
+        context = (start_context + middle_context + end_context).strip()
+        new_lines.extend([context, ""])
+    backlinks_str = "\n".join(new_lines)
     return f"{content}\n# Backlinks\n{backlinks_str}\n"
 
 
