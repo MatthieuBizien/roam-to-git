@@ -4,6 +4,7 @@ import asyncio
 import tempfile
 from pathlib import Path
 
+import git
 from dotenv import load_dotenv
 
 from roam_to_git.fs import reset_git_directory, unzip_markdown_archive, \
@@ -21,9 +22,11 @@ def main():
     patch_pyppeteer()
 
     if args.directory is None:
-        git_path = Path(__file__).parent / "notes"
+        git_path = Path(__file__).parent.parent / "notes"
     else:
         git_path = Path(args.directory).absolute()
+
+    assert not git.Repo(git_path).bare  # Fail fast if it's not a repo
 
     with tempfile.TemporaryDirectory() as markdown_zip_path, \
             tempfile.TemporaryDirectory() as json_zip_path:
