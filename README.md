@@ -18,7 +18,7 @@ This script automatically
 
 ## Setup
 
-- Clone this repository locally: `git clone https://github.com/MatthieuBizien/roam_research_download.git`
+- Clone this repository locally: `git clone https://github.com/MatthieuBizien/roam_to_git.git`
 - [Create a (private) Github repository for all your notes](https://help.github.com/en/github/getting-started-with-github/create-a-repo)
 - Clone it into a `notes/` directory,
 at the root of this repository. 
@@ -26,19 +26,18 @@ at the root of this repository.
 - Create a `.env` file for storing your secrets (RoamResearch email and password):
 `cp env.template .env`
 - Fill the .env file: `vi .env`
-- Create a [conda](https://www.anaconda.com/) environment: `conda env create -f environment.yml`
-(you can of course use stock Python, but python 3.6 is required)
+- Install the required packages: `pip3 install -r requirements.txt` 
+(python>=3.6 required, use [conda](https://www.anaconda.com/)  if needed)
 
 ## Manual backup
 
-- Activate the conda environment: `conda activate roam_research_download`
 - Run the script: `./rr_download.py`
 - Check your Github repository, it should be filled with your notes :)
 
 ## Automatic backup
 
 One-liner to run it with a [cron](https://en.wikipedia.org/wiki/Cron) every hours: 
-`conda activate roam_research_download && echo "0 *  *  *  *  PATH=$(dirname $(which python)):\$PATH '$(pwd)/rr_download.py'" | crontab -`
+`echo "0 *  *  *  *  PATH=$(dirname $(which python)):\$PATH PYTHONPATH='$(pwd)' python3 -m roam_to_git" | crontab -`
 
 # Task list
 
