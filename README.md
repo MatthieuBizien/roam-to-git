@@ -71,6 +71,10 @@ One-liner to run it with a [cron](https://en.wikipedia.org/wiki/Cron) every hour
 - [ ] Add example repository
 - [ ] Make the backup directory configurable
 - [ ] Add it to Pypi
+- [ ] Publicize it
+    - [ ] [RoamResearch Slack](https://roamresearch.slack.com/)
+    - [ ] [RoamResearch Reddit](https://www.reddit.com/r/RoamResearch/)
+    - [ ] Twitter
 
 ## Add features
 - [ ] Add automatic Google Keep retrieval
