@@ -69,7 +69,7 @@ One-liner to run it with a [cron](https://en.wikipedia.org/wiki/Cron) every hour
 ## Make it for others
 - [x] Push it to Github
 - [ ] Add example repository
-- [ ] Make the backup directory configurable
+- [x] Make the backup directory configurable
 - [ ] Add it to Pypi
 - [ ] Publicize it
     - [ ] [RoamResearch Slack](https://roamresearch.slack.com/)

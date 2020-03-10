@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import argparse
 import asyncio
 import tempfile
 from pathlib import Path
@@ -12,10 +12,18 @@ from roam_to_git.scrapping import patch_pyppeteer, download_rr_archive
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--directory", "-d", default=None,
+                        help="Directory of your notes are stored. Default to notes/")
+    args = parser.parse_args()
+
     load_dotenv()
     patch_pyppeteer()
 
-    git_path = Path(__file__).parent / "notes"  # FIXME use argparse
+    if args.directory is None:
+        git_path = Path(__file__).parent / "notes"
+    else:
+        git_path = Path(args.directory).absolute()
 
     with tempfile.TemporaryDirectory() as markdown_zip_path, \
             tempfile.TemporaryDirectory() as json_zip_path:
