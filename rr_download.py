@@ -202,7 +202,9 @@ def format_link(string: str) -> str:
     """Transform a RoamResearch-like link to a Markdown link."""
     # Regex are read-only and can't parse [[[[recursive]] [[links]]]], but they do the job.
     # We use a special syntax for links that can have SPACES in them
-    return re.sub(r"\[\[([^\]]+)\]\]", r"[\1](<\1.md>)", string)
+    string = re.sub(r"\[\[([^\]]+)\]\]", r"[\1](<\1.md>)", string)
+    string = re.sub(r"#([a-zA-Z-_0-9]+)", r"[\1](<\1.md>)", string)
+    return string
 
 
 def unzip_markdown_archive(zip_dir_path: Path, git_path: Path):

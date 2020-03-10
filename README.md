@@ -54,7 +54,7 @@ One-liner to run it with a [cron](https://en.wikipedia.org/wiki/Cron) every hour
 
 ### Link formatting to be compatible with Github markdown
 - [x] Format `[[links]]`
-- [ ] Format `#links`
+- [x] Format `#links`
 - [ ] Format `[[ [[link 1]] [[link 2]] ]]` 
 - [ ] Format `((link))`
 

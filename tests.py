@@ -37,7 +37,14 @@ class TestFormatLinks(unittest.TestCase):
 
     def test_two_links(self):
         self.assertEqual(format_link("[[link]] [[other]]"),
-                          "[link](<link.md>) [other](<other.md>)")
+                         "[link](<link.md>) [other](<other.md>)")
+
+    def test_one_hashtag(self):
+        self.assertEqual(format_link("string #link."), "string [link](<link.md>).")
+
+    def test_two_hashtag(self):
+        self.assertEqual(format_link("#link #other"),
+                         "[link](<link.md>) [other](<other.md>)")
 
 
 def _extract_links(string) -> List[str]:
@@ -55,6 +62,12 @@ class TestExtractLinks(unittest.TestCase):
         self.assertEqual(_extract_links("string [[link]]."), ["link"])
 
     def test_two_links(self):
+        self.assertEqual(_extract_links("[[link]] [[other]]"), ["link", "other"])
+
+    def test_one_hashtag(self):
+        self.assertEqual(_extract_links("string [[link]]."), ["link"])
+
+    def test_two_hashtag(self):
         self.assertEqual(_extract_links("[[link]] [[other]]"), ["link", "other"])
 
 
