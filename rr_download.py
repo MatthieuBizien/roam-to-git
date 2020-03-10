@@ -176,7 +176,6 @@ def extract_links(string: str) -> List[Match]:
 
 
 def add_backward_links(content: str, back_links: List[Tuple[str, Match]]) -> str:
-    global start_context, middle_context, end_context
     if not back_links:
         return content
     files = sorted(set((file_name[:-3], match) for file_name, match in back_links),
@@ -185,13 +184,13 @@ def add_backward_links(content: str, back_links: List[Tuple[str, Match]]) -> str
     for file, match in files:
         new_lines.append(f"## [{file}](<{file}.md>)")
 
-        start_context = list(takewhile(lambda c: c != "\n", match.string[:match.start()][::-1]))
-        start_context = "".join(start_context[::-1])
+        start_context_ = list(takewhile(lambda c: c != "\n", match.string[:match.start()][::-1]))
+        start_context = "".join(start_context_[::-1])
 
         middle_context = match.string[match.start():match.end()]
 
-        end_context = takewhile(lambda c: c != "\n", match.string[match.end()])
-        end_context = "".join(end_context)
+        end_context_ = takewhile(lambda c: c != "\n", match.string[match.end()])
+        end_context = "".join(end_context_)
 
         context = (start_context + middle_context + end_context).strip()
         new_lines.extend([context, ""])
