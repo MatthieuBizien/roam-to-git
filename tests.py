@@ -5,7 +5,7 @@ from typing import List
 
 import mypy.api
 
-from rr_download import format_link, extract_links, format_to_do
+from roam_to_git.formatter import format_to_do, extract_links, format_link
 
 
 class TestFormatTodo(unittest.TestCase):
@@ -76,11 +76,11 @@ class TestMypy(unittest.TestCase):
         stdout, stderr, exit_status = mypy.api.run(["--ignore-missing-imports", *files])
         self.assertEqual(exit_status, 0)
 
-    def test_mypy_rr_download(self):
-        self._test_mypy(["rr_download.py"])
+    def test_mypy_rtg(self):
+        self._test_mypy(["roam_to_git"])
 
-    def test_mypy_tests(self):
-        self._test_mypy(["rr_download.py", "tests.py"])
+    def test_mypy_rtg_and_tests(self):
+        self._test_mypy(["roam_to_git", "tests.py"])
 
     def test_mypy_all(self):
         self._test_mypy([str(f) for f in Path(__file__).parent.iterdir()
