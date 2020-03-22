@@ -64,6 +64,7 @@ One-liner to run it with a [cron](https://en.wikipedia.org/wiki/Cron) every hour
 
 ### Other formatting
 - [x] Format `{{TODO}}` to be compatible with Github markdown
+- [ ] Format `{{query}}``
 
 ## Make it for others
 - [x] Push it to Github
