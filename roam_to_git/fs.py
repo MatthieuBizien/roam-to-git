@@ -20,7 +20,7 @@ def get_zip_path(zip_dir_path: Path) -> Path:
 
 def reset_git_directory(git_path: Path):
     """Remove all files in a git directory"""
-    for file in git_path.glob("**"):
+    for file in git_path.glob("**/*"):
         if not file.is_file():
             continue
         if ".git" in file.parts:
