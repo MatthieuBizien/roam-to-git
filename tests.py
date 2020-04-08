@@ -26,6 +26,7 @@ class TestFormatTodo(unittest.TestCase):
 
 
 class TestFormatLinks(unittest.TestCase):
+    """Test that we correctly format the links"""
     def test_empty(self):
         self.assertEqual(format_link(""), "")
 
@@ -46,12 +47,29 @@ class TestFormatLinks(unittest.TestCase):
         self.assertEqual(format_link("#link #other"),
                          "[link](<link.md>) [other](<other.md>)")
 
+    def test_attribute(self):
+        self.assertEqual(format_link("  - string:: link"), "  - **[string](<string.md>):** link")
+
+    def test_attribute_then_attribute_like(self):
+        self.assertEqual(format_link("- attrib:: string:: val"),
+                         "- **[attrib](<attrib.md>):** string:: val")
+
+    def test_attribute_with_colon(self):
+        self.assertEqual(format_link("- attrib:is:: string"),
+                         "- **[attrib:is](<attrib:is.md>):** string")
+
+    def test_attribute_new_line(self):
+        self.assertEqual(format_link("  - attrib:: string\n  "
+                                     "- attrib:: string"),
+                         "  - **[attrib](<attrib.md>):** string\n "
+                         " - **[attrib](<attrib.md>):** string")
 
 def _extract_links(string) -> List[str]:
     return [m.group(1) for m in extract_links(string)]
 
 
 class TestExtractLinks(unittest.TestCase):
+    """Test that we correctly extract the links, for backreference"""
     def test_empty(self):
         self.assertEqual(_extract_links(""), [])
 
@@ -69,6 +87,23 @@ class TestExtractLinks(unittest.TestCase):
 
     def test_two_hashtag(self):
         self.assertEqual(_extract_links("[[link]] [[other]]"), ["link", "other"])
+
+    def test_no_attribute(self):
+        self.assertEqual(_extract_links("  - string: link"), [])
+
+    def test_attribute(self):
+        self.assertEqual(_extract_links("  - attrib:: link"), ["attrib"])
+
+    def test_attribute_then_attribute_like(self):
+        self.assertEqual(_extract_links("- attrib:: link:: val"), ["attrib"])
+
+    def test_attribute_with_colon(self):
+        self.assertEqual(_extract_links("- attrib:is:: link"), ["attrib:is"])
+
+    def test_attribute_new_line(self):
+        self.assertEqual(_extract_links("  - attrib:: link\n  "
+                                        "- attrib2:: link"),
+                         ["attrib", "attrib2"])
 
 
 class TestMypy(unittest.TestCase):

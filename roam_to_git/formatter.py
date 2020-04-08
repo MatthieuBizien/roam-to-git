@@ -50,7 +50,14 @@ def format_to_do(contents: str):
 
 
 def extract_links(string: str) -> List[Match]:
-    return list(re.finditer(r"\[\[([^\]]+)\]\]", string))
+    out = list(re.finditer(r"\[\["
+                           r"([^\]\n]+)"
+                           r"\]\]", string))
+    # Match attributes
+    out.extend(re.finditer(r"(?:^|\n) *- "
+                           r"((?:[^:\n]|:[^:\n])+)"  # Match everything except ::
+                           r"::", string))
+    return out
 
 
 def add_back_links(content: str, back_links: List[Tuple[str, Match]]) -> str:
@@ -80,6 +87,20 @@ def format_link(string: str) -> str:
     """Transform a RoamResearch-like link to a Markdown link."""
     # Regex are read-only and can't parse [[[[recursive]] [[links]]]], but they do the job.
     # We use a special syntax for links that can have SPACES in them
-    string = re.sub(r"\[\[([^\]]+)\]\]", r"[\1](<\1.md>)", string)
-    string = re.sub(r"#([a-zA-Z-_0-9]+)", r"[\1](<\1.md>)", string)
+    # Format internal reference: [[mynote]]
+    string = re.sub(r"\[\["  # We start with [[
+                    # TODO: manage a single ] in the tag
+                    r"([^\]\n]+)"  # Everything except ]
+                    r"\]\]",
+                    r"[\1](<\1.md>)", string, flags=re.MULTILINE)
+
+    # Format hashtags: #mytag
+    string = re.sub(r"#([a-zA-Z-_0-9]+)", r"[\1](<\1.md>)", string, flags=re.MULTILINE)
+
+    # Format attributes
+    string = re.sub(r"(^ *- )"  # Match the beginning, like '  - '
+                    r"(([^:\n]|:[^:\n])+)"  # Match everything except ::
+                    r"::",
+                    r"\1**[\2](<\2.md>):**",  # Format Markdown link
+                    string, flags=re.MULTILINE)
     return string
