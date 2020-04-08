@@ -49,25 +49,7 @@ async def download_rr_archive(output_type: str,
         await cdp.send('Page.setDownloadBehavior',
                        {'behavior': 'allow', 'downloadPath': str(output_directory)})
 
-    print("Opening signin page")
-    await document.goto('https://roamresearch.com/#/signin')
-    await asyncio.sleep(sleep_duration)
-
-    print("Fill email")
-    email_elem = await document.querySelector("input[name='email']")
-    await email_elem.click()
-    await email_elem.type(os.environ["ROAMRESEARCH_USER"])
-
-    print("Fill password")
-    passwd_elem = await document.querySelector("input[name='password']")
-    await passwd_elem.click()
-    await passwd_elem.type(os.environ["ROAMRESEARCH_PASSWORD"])
-
-    print("Click on sign-in")
-    buttons = await document.querySelectorAll('button')
-    signin_confirm, = [b for b in buttons if await get_text(document, b) == 'sign in']
-    await signin_confirm.click()
-    await asyncio.sleep(sleep_duration)
+    await signin(document, sleep_duration=sleep_duration)
 
     print("Wait for interface to load")
     dot_button = None
@@ -128,3 +110,26 @@ async def download_rr_archive(output_type: str,
                 return
     await browser.close()
     raise FileNotFoundError(f"Impossible to download {output_type} in {output_directory}")
+
+
+async def signin(document, sleep_duration=1.):
+    """Sign-in into Roam"""
+    print("Opening signin page")
+    await document.goto('https://roamresearch.com/#/signin')
+    await asyncio.sleep(sleep_duration)
+
+    print("Fill email")
+    email_elem = await document.querySelector("input[name='email']")
+    await email_elem.click()
+    await email_elem.type(os.environ["ROAMRESEARCH_USER"])
+
+    print("Fill password")
+    passwd_elem = await document.querySelector("input[name='password']")
+    await passwd_elem.click()
+    await passwd_elem.type(os.environ["ROAMRESEARCH_PASSWORD"])
+
+    print("Click on sign-in")
+    buttons = await document.querySelectorAll('button')
+    signin_confirm, = [b for b in buttons if await get_text(document, b) == 'sign in']
+    await signin_confirm.click()
+    await asyncio.sleep(sleep_duration)
