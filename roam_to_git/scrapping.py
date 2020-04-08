@@ -1,6 +1,8 @@
 import asyncio
 import os
+import sys
 from pathlib import Path
+from typing import Optional
 
 import pyppeteer.connection
 
@@ -30,7 +32,9 @@ async def download_rr_archive(output_type: str,
                               output_directory: Path,
                               devtools=False,
                               sleep_duration=1.,
-                              slow_motion=10):
+                              slow_motion=10,
+                              database: Optional[str] = None,
+                              ):
     """Download an archive in RoamResearch.
 
     :param output_type: Download JSON or Markdown
@@ -51,15 +55,26 @@ async def download_rr_archive(output_type: str,
 
     await signin(document, sleep_duration=sleep_duration)
 
+    if database:
+        await go_to_database(document, database)
+
     print("Wait for interface to load")
     dot_button = None
     for _ in range(100):
-        # Starting is a little bit slow
+        # Starting is a little bit slow, so we wait for the button that signal it's ok
         dot_button = await document.querySelector(".bp3-icon-more")
-        if dot_button is None:
-            await asyncio.sleep(sleep_duration)
-        else:
+        if dot_button is not None:
             break
+
+        # If we have multiple databases, we will be stuck. Let's detect that.
+        strong = await document.querySelector("strong")
+        if strong:
+            if "database's you are an admin of" == await get_text(document, strong):
+                print("You seems to have multiple databases. Please select it with the option "
+                      "--database")
+                sys.exit(1)
+
+        await asyncio.sleep(sleep_duration)
     assert dot_button is not None
     await dot_button.click()
 
@@ -133,3 +148,10 @@ async def signin(document, sleep_duration=1.):
     signin_confirm, = [b for b in buttons if await get_text(document, b) == 'sign in']
     await signin_confirm.click()
     await asyncio.sleep(sleep_duration)
+
+
+async def go_to_database(document, database):
+    """Go to the database page"""
+    url = f'https://roamresearch.com/#/app/{database}'
+    print(f"Load database from url '{url}'")
+    await document.goto(url)
