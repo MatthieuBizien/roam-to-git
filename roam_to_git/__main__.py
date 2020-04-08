@@ -16,6 +16,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--directory", "-d", default=None,
                         help="Directory of your notes are stored. Default to notes/")
+    parser.add_argument("--debug", action="store_true",
+                        help="Help debug by opening the browser in the foreground. Note that the "
+                             "git repository will not be updated with that option.")
     args = parser.parse_args()
 
     load_dotenv()
@@ -33,9 +36,18 @@ def main():
         markdown_zip_path = Path(markdown_zip_path)
         json_zip_path = Path(json_zip_path)
 
-        tasks = [download_rr_archive("markdown", markdown_zip_path),
-                 download_rr_archive("json", json_zip_path)]
-        asyncio.get_event_loop().run_until_complete(asyncio.gather(*tasks))
+        tasks = [download_rr_archive("markdown", markdown_zip_path, devtools=args.debug),
+                 download_rr_archive("json", json_zip_path, devtools=args.debug)
+                 ]
+        if args.debug:
+            for task in tasks:
+                # Run sequentially for easier debugging
+                asyncio.get_event_loop().run_until_complete(task)
+            print("Exiting without updating the git repository, "
+                  "because we can't get the downloads with the option --debug")
+            return
+        else:
+            asyncio.get_event_loop().run_until_complete(asyncio.gather(*tasks))
 
         reset_git_directory(git_path)
         unzip_markdown_archive(markdown_zip_path, git_path)
