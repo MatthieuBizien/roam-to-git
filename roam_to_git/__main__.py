@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import argparse
-import asyncio
 import os
 import tempfile
 from pathlib import Path
@@ -8,9 +7,10 @@ from pathlib import Path
 import git
 from dotenv import load_dotenv
 
+from roam_to_git.formatter import format_markdown_archive
 from roam_to_git.fs import reset_git_directory, unzip_markdown_archive, \
-    unzip_json_archive, commit_git_directory, push_git_repository
-from roam_to_git.scrapping import patch_pyppeteer, download_rr_archive
+    unzip_and_save_json_archive, commit_git_directory, push_git_repository, save_markdowns
+from roam_to_git.scrapping import patch_pyppeteer, scrap
 
 
 def main():
@@ -27,6 +27,8 @@ def main():
     parser.add_argument("--skip-git", action="store_true",
                         help="Consider the repository as just a directory, and don't do any "
                              "git-related action.")
+    parser.add_argument("--skip-fetch", action="store_true",
+                        help="Do not download the data from Roam, just update the formatting.")
 
     args = parser.parse_args()
 
@@ -42,29 +44,23 @@ def main():
         repo = git.Repo(git_path)
         assert not repo.bare  # Fail fast if it's not a repo
 
-    with tempfile.TemporaryDirectory() as markdown_zip_path, \
-            tempfile.TemporaryDirectory() as json_zip_path:
-        markdown_zip_path = Path(markdown_zip_path)
-        json_zip_path = Path(json_zip_path)
+    reset_git_directory(git_path / "formatted")
+    if not args.skip_fetch:
+        reset_git_directory(git_path / "json")
+        reset_git_directory(git_path / "markdown")
 
-        tasks = [download_rr_archive("markdown", markdown_zip_path, devtools=args.debug,
-                                     database=args.database),
-                 download_rr_archive("json", json_zip_path, devtools=args.debug,
-                                     database=args.database),
-                 ]
-        if args.debug:
-            for task in tasks:
-                # Run sequentially for easier debugging
-                asyncio.get_event_loop().run_until_complete(task)
-            print("Exiting without updating the git repository, "
-                  "because we can't get the downloads with the option --debug")
-            return
-        else:
-            asyncio.get_event_loop().run_until_complete(asyncio.gather(*tasks))
+        with tempfile.TemporaryDirectory() as markdown_zip_path, \
+                tempfile.TemporaryDirectory() as json_zip_path:
+            markdown_zip_path = Path(markdown_zip_path)
+            json_zip_path = Path(json_zip_path)
 
-        reset_git_directory(git_path)
-        unzip_markdown_archive(markdown_zip_path, git_path)
-        unzip_json_archive(json_zip_path, git_path)
+            scrap(markdown_zip_path, json_zip_path, args.database, args.debug)
+            raws = unzip_markdown_archive(markdown_zip_path)
+            save_markdowns(git_path / "markdown", raws)
+            unzip_and_save_json_archive(json_zip_path, git_path / "json")
+
+    formatted = format_markdown_archive(git_path / "markdown")
+    save_markdowns(git_path / "formatted", formatted)
 
     if repo is not None:
         commit_git_directory(repo)

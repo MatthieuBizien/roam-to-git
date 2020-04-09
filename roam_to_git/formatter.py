@@ -1,7 +1,22 @@
+import os
 import re
 from collections import defaultdict
 from itertools import takewhile
+from pathlib import Path
 from typing import List, Match, Tuple, Dict
+
+
+def format_markdown_archive(raw_directory: Path) -> Dict[str, str]:
+    contents = {}
+    for file in raw_directory.iterdir():
+        if not file.is_file():
+            continue
+        with file.open() as f:
+            content = file.read_text()
+        parts = file.parts[len(raw_directory.parts):]
+        file_name = os.path.join(*parts)
+        contents[file_name] = content
+    return format_markdown(contents)
 
 
 def format_markdown(contents: Dict[str, str]) -> Dict[str, str]:

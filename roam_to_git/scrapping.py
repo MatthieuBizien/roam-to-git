@@ -155,3 +155,24 @@ async def go_to_database(document, database):
     url = f'https://roamresearch.com/#/app/{database}'
     print(f"Load database from url '{url}'")
     await document.goto(url)
+
+
+def scrap(markdown_zip_path: Path, json_zip_path: Path, database: Optional[str], debug: bool):
+    # Just for easier run from the CLI
+    markdown_zip_path = Path(markdown_zip_path)
+    json_zip_path = Path(json_zip_path)
+
+    tasks = [download_rr_archive("markdown", Path(markdown_zip_path), devtools=debug,
+                                 database=database),
+             download_rr_archive("json", Path(json_zip_path), devtools=debug,
+                                 database=database),
+             ]
+    if debug:
+        for task in tasks:
+            # Run sequentially for easier debugging
+            asyncio.get_event_loop().run_until_complete(task)
+        print("Exiting without updating the git repository, "
+              "because we can't get the downloads with the option --debug")
+        return
+    else:
+        asyncio.get_event_loop().run_until_complete(asyncio.gather(*tasks))
