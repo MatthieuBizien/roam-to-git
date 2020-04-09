@@ -28,12 +28,24 @@ async def get_text(page, b, norm=True):
     return text
 
 
+class Config:
+    def __init__(self, database: Optional[str], debug: bool):
+        self.user = os.environ["ROAMRESEARCH_USER"]
+        self.password = os.environ["ROAMRESEARCH_PASSWORD"]
+        assert self.user
+        assert self.password
+        if database:
+            self.database = database
+        else:
+            self.database = os.environ.get("ROAMRESEARCH_DATABASE")
+        self.debug = debug
+
+
 async def download_rr_archive(output_type: str,
                               output_directory: Path,
-                              devtools=False,
+                              config: Config,
                               sleep_duration=1.,
                               slow_motion=10,
-                              database: Optional[str] = None,
                               ):
     """Download an archive in RoamResearch.
 
@@ -44,19 +56,19 @@ async def download_rr_archive(output_type: str,
     :param slow_motion: How many seconds to before to close the browser when the download is started
     """
     print("Creating browser")
-    browser = await pyppeteer.launch(devtools=devtools, slowMo=slow_motion)
+    browser = await pyppeteer.launch(devtools=config.debug, slowMo=slow_motion)
     document = await browser.newPage()
 
-    if not devtools:
+    if not config.debug:
         print("Configure downloads to", output_directory)
         cdp = await document.target.createCDPSession()
         await cdp.send('Page.setDownloadBehavior',
                        {'behavior': 'allow', 'downloadPath': str(output_directory)})
 
-    await signin(document, sleep_duration=sleep_duration)
+    await signin(document, config, sleep_duration=sleep_duration)
 
-    if database:
-        await go_to_database(document, database)
+    if config.database:
+        await go_to_database(document, config.database)
 
     print("Wait for interface to load")
     dot_button = None
@@ -112,7 +124,7 @@ async def download_rr_archive(output_type: str,
     await export_all_confirm.click()
 
     # Wait for download to finish
-    if devtools:
+    if config.debug:
         # No way to check because download location is not specified
         return
     for _ in range(1000):
@@ -127,21 +139,21 @@ async def download_rr_archive(output_type: str,
     raise FileNotFoundError(f"Impossible to download {output_type} in {output_directory}")
 
 
-async def signin(document, sleep_duration=1.):
+async def signin(document, config: Config, sleep_duration=1.):
     """Sign-in into Roam"""
     print("Opening signin page")
     await document.goto('https://roamresearch.com/#/signin')
     await asyncio.sleep(sleep_duration)
 
-    print("Fill email")
+    print(f"Fill email '{config.user}'")
     email_elem = await document.querySelector("input[name='email']")
     await email_elem.click()
-    await email_elem.type(os.environ["ROAMRESEARCH_USER"])
+    await email_elem.type(config.user)
 
     print("Fill password")
     passwd_elem = await document.querySelector("input[name='password']")
     await passwd_elem.click()
-    await passwd_elem.type(os.environ["ROAMRESEARCH_PASSWORD"])
+    await passwd_elem.type(config.password)
 
     print("Click on sign-in")
     buttons = await document.querySelectorAll('button')
@@ -157,17 +169,15 @@ async def go_to_database(document, database):
     await document.goto(url)
 
 
-def scrap(markdown_zip_path: Path, json_zip_path: Path, database: Optional[str], debug: bool):
+def scrap(markdown_zip_path: Path, json_zip_path: Path, config: Config):
     # Just for easier run from the CLI
     markdown_zip_path = Path(markdown_zip_path)
     json_zip_path = Path(json_zip_path)
 
-    tasks = [download_rr_archive("markdown", Path(markdown_zip_path), devtools=debug,
-                                 database=database),
-             download_rr_archive("json", Path(json_zip_path), devtools=debug,
-                                 database=database),
+    tasks = [download_rr_archive("markdown", Path(markdown_zip_path), config=config),
+             download_rr_archive("json", Path(json_zip_path), config=config),
              ]
-    if debug:
+    if config.debug:
         for task in tasks:
             # Run sequentially for easier debugging
             asyncio.get_event_loop().run_until_complete(task)

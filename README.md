@@ -18,26 +18,33 @@ This script automatically
 
 ## Setup
 
-- Clone this repository locally: `git clone https://github.com/MatthieuBizien/roam_to_git.git`
-- [Create a (private) Github repository for all your notes](https://help.github.com/en/github/getting-started-with-github/create-a-repo)
-- Clone it into a `notes/` directory,
-at the root of this repository. 
-`git clone git@github.com:GITHUB_USERNAME/GITHUB_REPO notes`
-- Create a `.env` file for storing your secrets (RoamResearch email and password):
-`cp env.template .env`
+### Install Roam-To-Git
+With [pipx](https://github.com/pipxproject/pipx) 
+(if you don't know pipx, you should look at it, it's wonderful!)
+
+`pipx install git+https://github.com/MatthieuBizien/roam-to-git.git`
+
+### Create a (private) Github repository for all your notes
+
+With [gh](https://github.com/cli/cli): `gh repo create notes` (yes, it's private)
+
+Or [manually](https://help.github.com/en/github/getting-started-with-github/create-a-repo)
+
+### Configure environment variables
+
+- `curl https://raw.githubusercontent.com/MatthieuBizien/roam-to-git/master/env.template > notes/.env`
 - Fill the .env file: `vi .env`
-- Install the required packages: `pip3 install -r requirements.txt` 
-(python>=3.6 required, use [conda](https://www.anaconda.com/)  if needed)
+- Ignore it: `echo .env > notes/.gitignore; cd notes; git add .gitignore; git commit -m "Initial commit"`
 
 ## Manual backup
 
-- Run the script: `./rr_download.py`
+- Run the script: `roam-to-git notes/`
 - Check your Github repository, it should be filled with your notes :)
 
 ## Automatic backup
 
 One-liner to run it with a [cron](https://en.wikipedia.org/wiki/Cron) every hours: 
-`echo "0 *  *  *  *  PATH=$(dirname $(which python)):\$PATH PYTHONPATH='$(pwd)' python3 -m roam_to_git" | crontab -`
+`echo "0 *  *  *  *  '$(which roam-to-git)' '$(pwd)/notes'" | crontab -`
 
 # Task list
 
@@ -71,7 +78,6 @@ One-liner to run it with a [cron](https://en.wikipedia.org/wiki/Cron) every hour
 - [x] Push it to Github
 - [ ] Add example repository
 - [x] Make the backup directory configurable
-- [ ] Add it to Pypi
 - [ ] Publicize it
     - [ ] [RoamResearch Slack](https://roamresearch.slack.com/)
     - [ ] [RoamResearch Reddit](https://www.reddit.com/r/RoamResearch/)

@@ -11,8 +11,8 @@ def format_markdown_archive(raw_directory: Path) -> Dict[str, str]:
     for file in raw_directory.iterdir():
         if not file.is_file():
             continue
-        with file.open() as f:
-            content = file.read_text()
+        with file.open(encoding="utf-8") as f:
+            content = file.read_text(encoding="utf-8")
         parts = file.parts[len(raw_directory.parts):]
         file_name = os.path.join(*parts)
         contents[file_name] = content
