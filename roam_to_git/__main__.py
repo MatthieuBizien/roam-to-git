@@ -9,7 +9,7 @@ import git
 from dotenv import load_dotenv
 
 from roam_to_git.fs import reset_git_directory, unzip_markdown_archive, \
-    unzip_json_archive, commit_git_directory
+    unzip_json_archive, commit_git_directory, push_git_repository
 from roam_to_git.scrapping import patch_pyppeteer, download_rr_archive
 
 
@@ -24,6 +24,10 @@ def main():
     parser.add_argument("--database", default=os.environ.get("ROAMRESEARCH_DATABASE"),
                         help="If you have multiple Roam databases, select the one you want to save."
                              "Can also be configured with env variable ROAMRESEARCH_DATABASE.")
+    parser.add_argument("--skip-git", action="store_true",
+                        help="Consider the repository as just a directory, and don't do any "
+                             "git-related action.")
+
     args = parser.parse_args()
 
     patch_pyppeteer()
@@ -32,7 +36,11 @@ def main():
     else:
         git_path = Path(args.directory).absolute()
 
-    assert not git.Repo(git_path).bare  # Fail fast if it's not a repo
+    if args.skip_git:
+        repo = None
+    else:
+        repo = git.Repo(git_path)
+        assert not repo.bare  # Fail fast if it's not a repo
 
     with tempfile.TemporaryDirectory() as markdown_zip_path, \
             tempfile.TemporaryDirectory() as json_zip_path:
@@ -57,7 +65,10 @@ def main():
         reset_git_directory(git_path)
         unzip_markdown_archive(markdown_zip_path, git_path)
         unzip_json_archive(json_zip_path, git_path)
-        commit_git_directory(git_path)
+
+    if repo is not None:
+        commit_git_directory(repo)
+        push_git_repository(repo)
 
 
 if __name__ == "__main__":

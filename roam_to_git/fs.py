@@ -58,17 +58,17 @@ def unzip_json_archive(zip_dir_path: Path, git_path: Path):
                 json.dump(content, f, sort_keys=True, indent=2, ensure_ascii=True)
 
 
-def commit_git_directory(git_path: Path):
+def commit_git_directory(repo: git.Repo) -> git.Repo:
     """Add an automatic commit in a git directory if it has changed, and push it"""
-    repo = git.Repo(git_path)
-    assert not repo.bare
     if not repo.is_dirty() and not repo.untracked_files:
         # No change, nothing to do
         return
-    print("Committing in", git_path)
+    print("Committing git repository", repo.git_dir)
     repo.git.add(A=True)  # https://github.com/gitpython-developers/GitPython/issues/292
     repo.index.commit(f"Automatic commit {datetime.datetime.now().isoformat()}")
 
+
+def push_git_repository(repo: git.Repo):
     print("Pushing to origin")
     origin = repo.remote(name='origin')
     origin.push()
