@@ -26,4 +26,7 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
     ],
+    entry_points={
+        'console_scripts': ['roam_to_git=roam_to_git.__main__:main'],
+    }
 )
