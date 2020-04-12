@@ -1,10 +1,13 @@
 import asyncio
+import atexit
 import os
 import sys
 from pathlib import Path
 from typing import Optional
 
+import psutil
 import pyppeteer.connection
+from pyppeteer.page import Page
 
 
 def patch_pyppeteer():
@@ -35,7 +38,7 @@ class Config:
         assert self.user
         assert self.password
         if database:
-            self.database = database
+            self.database: Optional[str] = database
         else:
             self.database = os.environ.get("ROAMRESEARCH_DATABASE")
         self.debug = debug
@@ -47,18 +50,39 @@ async def download_rr_archive(output_type: str,
                               sleep_duration=1.,
                               slow_motion=10,
                               ):
+    print("Creating browser")
+    browser = await pyppeteer.launch(devtools=config.debug,
+                                     slowMo=slow_motion,
+                                     autoClose=False,
+                                     )
+    try:
+        pages = await browser.pages()
+        document = pages[0]
+        return await _download_rr_archive(document, output_type, output_directory, config,
+                                          sleep_duration)
+    except (KeyboardInterrupt, SystemExit):
+        print("Closing browser on interrupt", output_type)
+        await browser.close()
+        print("Closed browser", output_type)
+        raise
+    finally:
+        print("Closing browser", output_type)
+        await browser.close()
+        print("Closed browser", output_type)
+
+
+async def _download_rr_archive(document: Page,
+                               output_type: str,
+                               output_directory: Path,
+                               config: Config,
+                               sleep_duration=1.,
+                               ):
     """Download an archive in RoamResearch.
 
     :param output_type: Download JSON or Markdown
     :param output_directory: Directory where to stock the outputs
-    :param devtools: Should we open Chrome
     :param sleep_duration: How many seconds to wait after the clicks
-    :param slow_motion: How many seconds to before to close the browser when the download is started
     """
-    print("Creating browser")
-    browser = await pyppeteer.launch(devtools=config.debug, slowMo=slow_motion)
-    document = await browser.newPage()
-
     if not config.debug:
         print("Configure downloads to", output_directory)
         cdp = await document.target.createCDPSession()
@@ -127,18 +151,16 @@ async def download_rr_archive(output_type: str,
     if config.debug:
         # No way to check because download location is not specified
         return
-    for i in range(1, 1_001):
-        await asyncio.sleep(0.1)
-        if i % 10 == 0:
-            sys.stdout.write("\n" if i % 600 == 0 else "x" if i % 100 == 0 else ".")
-            sys.stdout.flush()
+    for i in range(1, 60 * 10):
+        await asyncio.sleep(1)
+        if i % 60 == 0:
+            print(f"Keep waiting for {output_type}, {i}s elapsed")
         for file in output_directory.iterdir():
             if file.name.endswith(".zip"):
-                print("File", file, "found")
+                print("File", file, "found for", output_type)
                 await asyncio.sleep(1)
-                await browser.close()
                 return
-    await browser.close()
+    print("Waiting too long", output_type)
     raise FileNotFoundError(f"Impossible to download {output_type} in {output_directory}")
 
 
@@ -172,6 +194,21 @@ async def go_to_database(document, database):
     await document.goto(url)
 
 
+def _kill_child_process(timeout=50):
+    procs = psutil.Process().children(recursive=True)
+    if not procs:
+        return
+    print(f"Terminate child process {procs}")
+    for p in procs:
+        p.terminate()
+    gone, still_alive = psutil.wait_procs(procs, timeout=timeout)
+    if still_alive:
+        print(f"Kill child process {still_alive} that was still alive after "
+              f"'timeout={timeout}' from 'terminate()' command")
+        for p in still_alive:
+            p.kill()
+
+
 def scrap(markdown_zip_path: Path, json_zip_path: Path, config: Config):
     # Just for easier run from the CLI
     markdown_zip_path = Path(markdown_zip_path)
@@ -180,12 +217,16 @@ def scrap(markdown_zip_path: Path, json_zip_path: Path, config: Config):
     tasks = [download_rr_archive("markdown", Path(markdown_zip_path), config=config),
              download_rr_archive("json", Path(json_zip_path), config=config),
              ]
+    # Register to always kill child process when the script close, to not have zombie process.
+    # Because of https://github.com/miyakogi/pyppeteer/issues/274 without this patch it does happen
+    # a lot.
+    atexit.register(_kill_child_process)
     if config.debug:
         for task in tasks:
             # Run sequentially for easier debugging
             asyncio.get_event_loop().run_until_complete(task)
         print("Exiting without updating the git repository, "
               "because we can't get the downloads with the option --debug")
-        return
     else:
         asyncio.get_event_loop().run_until_complete(asyncio.gather(*tasks))
+        print("Scrapping finished")
