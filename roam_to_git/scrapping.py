@@ -123,12 +123,15 @@ async def download_rr_archive(output_type: str,
     export_all_confirm, = [b for b in buttons if await get_text(document, b) == 'export all']
     await export_all_confirm.click()
 
-    # Wait for download to finish
+    print("Wait download of", output_type, "to", output_directory)
     if config.debug:
         # No way to check because download location is not specified
         return
-    for _ in range(1000):
+    for i in range(1, 1_001):
         await asyncio.sleep(0.1)
+        if i % 10 == 0:
+            sys.stdout.write("\n" if i % 600 == 0 else "x" if i % 100 == 0 else ".")
+            sys.stdout.flush()
         for file in output_directory.iterdir():
             if file.name.endswith(".zip"):
                 print("File", file, "found")
