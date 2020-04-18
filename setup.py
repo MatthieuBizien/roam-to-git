@@ -13,6 +13,7 @@ setup(
     keywords=['ROAMRESEARCH', 'GIT', 'BACKUP'],
     install_requires=[
         'gitpython',
+        'loguru',
         'pyppeteer',
         'python-dotenv',
         'psutil'

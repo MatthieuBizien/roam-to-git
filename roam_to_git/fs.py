@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import List, Dict
 
 import git
+from loguru import logger
 
 
 def get_zip_path(zip_dir_path: Path) -> Path:
@@ -31,7 +32,7 @@ def reset_git_directory(git_path: Path, skip=(".git",)):
             file.unlink()
         elif file.is_dir():
             if list(file.iterdir()):
-                print("Impossible to remove directory", file)
+                logger.debug("Impossible to remove directory {}", file)
             else:
                 file.rmdir()
 
@@ -46,7 +47,7 @@ def unzip_markdown_archive(zip_dir_path: Path):
 
 
 def save_markdowns(directory: Path, contents: Dict[str, str]):
-    print("Saving markdown to", directory)
+    logger.debug("Saving markdown to {}", directory)
     # Format and write the markdown files
     for file_name, content in contents.items():
         dest = (directory / file_name)
@@ -58,7 +59,7 @@ def save_markdowns(directory: Path, contents: Dict[str, str]):
 
 
 def unzip_and_save_json_archive(zip_dir_path: Path, directory: Path):
-    print("Saving json to", directory)
+    logger.debug("Saving json to {}", directory)
     directory.mkdir(exist_ok=True)
     zip_path = get_zip_path(zip_dir_path)
     with zipfile.ZipFile(zip_path) as zip_file:
@@ -75,12 +76,12 @@ def commit_git_directory(repo: git.Repo):
     if not repo.is_dirty() and not repo.untracked_files:
         # No change, nothing to do
         return
-    print("Committing git repository", repo.git_dir)
+    logger.debug("Committing git repository {}", repo.git_dir)
     repo.git.add(A=True)  # https://github.com/gitpython-developers/GitPython/issues/292
     repo.index.commit(f"Automatic commit {datetime.datetime.now().isoformat()}")
 
 
 def push_git_repository(repo: git.Repo):
-    print("Pushing to origin")
+    logger.debug("Pushing to origin")
     origin = repo.remote(name='origin')
     origin.push()

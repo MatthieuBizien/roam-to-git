@@ -7,6 +7,7 @@ from typing import Optional
 
 import psutil
 import pyppeteer.connection
+from loguru import logger
 from pyppeteer.page import Page
 
 
@@ -50,7 +51,7 @@ async def download_rr_archive(output_type: str,
                               sleep_duration=1.,
                               slow_motion=10,
                               ):
-    print("Creating browser")
+    logger.debug("Creating browser")
     browser = await pyppeteer.launch(devtools=config.debug,
                                      slowMo=slow_motion,
                                      autoClose=False,
@@ -61,14 +62,14 @@ async def download_rr_archive(output_type: str,
         return await _download_rr_archive(document, output_type, output_directory, config,
                                           sleep_duration)
     except (KeyboardInterrupt, SystemExit):
-        print("Closing browser on interrupt", output_type)
+        logger.debug("Closing browser on interrupt {}", output_type)
         await browser.close()
-        print("Closed browser", output_type)
+        logger.debug("Closed browser {}", output_type)
         raise
     finally:
-        print("Closing browser", output_type)
+        logger.debug("Closing browser {}", output_type)
         await browser.close()
-        print("Closed browser", output_type)
+        logger.debug("Closed browser {}", output_type)
 
 
 async def _download_rr_archive(document: Page,
@@ -84,7 +85,7 @@ async def _download_rr_archive(document: Page,
     :param sleep_duration: How many seconds to wait after the clicks
     """
     if not config.debug:
-        print("Configure downloads to", output_directory)
+        logger.debug("Configure downloads to {}", output_directory)
         cdp = await document.target.createCDPSession()
         await cdp.send('Page.setDownloadBehavior',
                        {'behavior': 'allow', 'downloadPath': str(output_directory)})
@@ -94,7 +95,7 @@ async def _download_rr_archive(document: Page,
     if config.database:
         await go_to_database(document, config.database)
 
-    print("Wait for interface to load")
+    logger.debug("Wait for interface to load")
     dot_button = None
     for _ in range(100):
         # Starting is a little bit slow, so we wait for the button that signal it's ok
@@ -106,15 +107,16 @@ async def _download_rr_archive(document: Page,
         strong = await document.querySelector("strong")
         if strong:
             if "database's you are an admin of" == await get_text(document, strong):
-                print("You seems to have multiple databases. Please select it with the option "
-                      "--database")
+                logger.error(
+                    "You seems to have multiple databases. Please select it with the option "
+                    "--database")
                 sys.exit(1)
 
         await asyncio.sleep(sleep_duration)
     assert dot_button is not None
     await dot_button.click()
 
-    print("Launch popup")
+    logger.debug("Launch popup")
     divs_pb3 = await document.querySelectorAll(".bp3-fill")
     export_all, = [b for b in divs_pb3 if await get_text(document, b) == 'export all']
     await export_all.click()
@@ -128,11 +130,11 @@ async def _download_rr_archive(document: Page,
         assert dropdown_button_text in ["markdown", "json"], dropdown_button_text
         return dropdown_button, dropdown_button_text
 
-    print("Checking download type")
+    logger.debug("Checking download type")
     button, button_text = await get_dropdown_button()
 
     if button_text != output_type:
-        print("Changing output type to", output_type)
+        logger.debug("Changing output type to {}", output_type)
         await button.click()
         await asyncio.sleep(sleep_duration)
         output_type_elem, = await document.querySelectorAll(".bp3-text-overflow-ellipsis")
@@ -143,45 +145,45 @@ async def _download_rr_archive(document: Page,
         _, button_text_ = await get_dropdown_button()
         assert button_text_ == output_type, (button_text_, output_type)
 
-    print("Downloading output of type", output_type)
+    logger.debug("Downloading output of type {}", output_type)
     buttons = await document.querySelectorAll('button')
     export_all_confirm, = [b for b in buttons if await get_text(document, b) == 'export all']
     await export_all_confirm.click()
 
-    print("Wait download of", output_type, "to", output_directory)
+    logger.debug("Wait download of {} to {}", output_type, output_directory)
     if config.debug:
         # No way to check because download location is not specified
         return
     for i in range(1, 60 * 10):
         await asyncio.sleep(1)
         if i % 60 == 0:
-            print(f"Keep waiting for {output_type}, {i}s elapsed")
+            logger.debug("Keep waiting for {}, {}s elapsed", output_type, i)
         for file in output_directory.iterdir():
             if file.name.endswith(".zip"):
-                print("File", file, "found for", output_type)
+                logger.debug("File {} found for {}", file, output_type)
                 await asyncio.sleep(1)
                 return
-    print("Waiting too long", output_type)
-    raise FileNotFoundError(f"Impossible to download {output_type} in {output_directory}")
+    logger.debug("Waiting too long {}")
+    raise FileNotFoundError("Impossible to download {} in {}", output_type, output_directory)
 
 
 async def signin(document, config: Config, sleep_duration=1.):
     """Sign-in into Roam"""
-    print("Opening signin page")
+    logger.debug("Opening signin page")
     await document.goto('https://roamresearch.com/#/signin')
     await asyncio.sleep(sleep_duration)
 
-    print(f"Fill email '{config.user}'")
+    logger.debug("Fill email '{}'", config.user)
     email_elem = await document.querySelector("input[name='email']")
     await email_elem.click()
     await email_elem.type(config.user)
 
-    print("Fill password")
+    logger.debug("Fill password")
     passwd_elem = await document.querySelector("input[name='password']")
     await passwd_elem.click()
     await passwd_elem.type(config.password)
 
-    print("Click on sign-in")
+    logger.debug("Click on sign-in")
     buttons = await document.querySelectorAll('button')
     signin_confirm, = [b for b in buttons if await get_text(document, b) == 'sign in']
     await signin_confirm.click()
@@ -191,7 +193,7 @@ async def signin(document, config: Config, sleep_duration=1.):
 async def go_to_database(document, database):
     """Go to the database page"""
     url = f'https://roamresearch.com/#/app/{database}'
-    print(f"Load database from url '{url}'")
+    logger.debug(f"Load database from url '{url}'")
     await document.goto(url)
 
 
@@ -199,13 +201,13 @@ def _kill_child_process(timeout=50):
     procs = psutil.Process().children(recursive=True)
     if not procs:
         return
-    print(f"Terminate child process {procs}")
+    logger.debug("Terminate child process {}", procs)
     for p in procs:
         p.terminate()
     gone, still_alive = psutil.wait_procs(procs, timeout=timeout)
     if still_alive:
-        print(f"Kill child process {still_alive} that was still alive after "
-              f"'timeout={timeout}' from 'terminate()' command")
+        logger.warning(f"Kill child process {still_alive} that was still alive after "
+                       f"'timeout={timeout}' from 'terminate()' command")
         for p in still_alive:
             p.kill()
 
@@ -226,8 +228,8 @@ def scrap(markdown_zip_path: Path, json_zip_path: Path, config: Config):
         for task in tasks:
             # Run sequentially for easier debugging
             asyncio.get_event_loop().run_until_complete(task)
-        print("Exiting without updating the git repository, "
-              "because we can't get the downloads with the option --debug")
+        logger.warning("Exiting without updating the git repository, "
+                       "because we can't get the downloads with the option --debug")
     else:
         asyncio.get_event_loop().run_until_complete(asyncio.gather(*tasks))
-        print("Scrapping finished")
+        logger.debug("Scrapping finished")

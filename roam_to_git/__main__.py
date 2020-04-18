@@ -8,13 +8,14 @@ from pathlib import Path
 
 import git
 from dotenv import load_dotenv
+from loguru import logger
 
 from roam_to_git.formatter import format_markdown_archive
 from roam_to_git.fs import reset_git_directory, unzip_markdown_archive, \
     unzip_and_save_json_archive, commit_git_directory, push_git_repository, save_markdowns
 from roam_to_git.scrapping import patch_pyppeteer, scrap, Config
 
-
+logger.catch()
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("directory", default=None, nargs="?",
@@ -39,13 +40,13 @@ def main():
         git_path = Path(args.directory).absolute()
 
     if (git_path / ".env").exists():
-        print("Loading secrets from", git_path / ".env")
+        logger.debug("Loading secrets from {}", git_path / ".env")
         load_dotenv(git_path / ".env", override=True)
     else:
-        print("No secret found at", git_path / ".env")
+        logger.debug("No secret found at {}", git_path / ".env")
     if "ROAMRESEARCH_USER" not in os.environ or "ROAMRESEARCH_PASSWORD" not in os.environ:
-        print("Please define ROAMRESEARCH_USER and ROAMRESEARCH_PASSWORD, "
-              "in the .env file of your notes repository, or in environment variables")
+        logger.error("Please define ROAMRESEARCH_USER and ROAMRESEARCH_PASSWORD, "
+                     "in the .env file of your notes repository, or in environment variables")
         sys.exit(1)
     config = Config(args.database, debug=args.debug)
 
@@ -67,7 +68,7 @@ def main():
 
             scrap(markdown_zip_path, json_zip_path, config)
             if config.debug:
-                print("waiting for the download...")
+                logger.debug("waiting for the download...")
                 time.sleep(20)
                 return
             raws = unzip_markdown_archive(markdown_zip_path)
