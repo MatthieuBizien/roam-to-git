@@ -30,6 +30,8 @@ With [gh](https://github.com/cli/cli): `gh repo create notes` (yes, it's private
 
 Or [manually](https://help.github.com/en/github/getting-started-with-github/create-a-repo)
 
+Then run `git push --set-upstream origin master`
+
 ### Configure environment variables
 
 - `curl https://raw.githubusercontent.com/MatthieuBizien/roam-to-git/master/env.template > notes/.env`
