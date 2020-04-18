@@ -15,6 +15,7 @@ setup(
         'gitpython',
         'pyppeteer',
         'python-dotenv',
+        'psutil'
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',
