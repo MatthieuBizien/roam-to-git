@@ -66,8 +66,11 @@ def add_back_links(content: str, back_links: List[Tuple[str, Match]]) -> str:
     files = sorted(set((file_name[:-3], match) for file_name, match in back_links),
                    key=lambda e: (e[0], e[1].start()))
     new_lines = []
+    file_before = None
     for file, match in files:
-        new_lines.append(f"## [{file}](<{file}.md>)")
+        if file != file_before:
+            new_lines.append(f"## [{file}](<{file}.md>)")
+        file_before = file
 
         start_context_ = list(takewhile(lambda c: c != "\n", match.string[:match.start()][::-1]))
         start_context = "".join(start_context_[::-1])
