@@ -14,7 +14,16 @@ This script automatically
 - You have a history of your notes.
 - You can browse your Github repository with a mobile phone.
 
-# How to use it
+# Use it with Github Actions (recommended)
+
+- Fork this repository  <img src="https://help.github.com/assets/images/help/repository/fork_button.jpg" width="250"/>
+
+Now in your new repository:
+- Make it private (in settings)
+- Enable Github Action
+- Configure Github secrets (in settings) like in [env.template](env.template)
+
+# Use it locally
 
 ## Setup
 
@@ -90,4 +99,5 @@ One-liner to run it with a [cron](https://en.wikipedia.org/wiki/Cron) every hour
 
 ## Some ideas, I don't need it, but PR welcome 😀
 - [ ] Test it/make it work on Windows
-- [ ] Pre-configure a CI server so it can run every hour without a computer
+- [x] Pre-configure a CI server so it can run every hour without a computer
+    Thanks @Stvad for [#4](https://github.com/MatthieuBizien/roam-to-git/issues/4)!
