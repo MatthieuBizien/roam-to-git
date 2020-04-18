@@ -122,6 +122,7 @@ async def _download_rr_archive(document: Page,
 
     async def get_dropdown_button():
         dropdown_button = await document.querySelector(".bp3-button-text")
+        assert dropdown_button is not None
         dropdown_button_text = await get_text(document, dropdown_button)
         # Defensive check if the interface change
         assert dropdown_button_text in ["markdown", "json"], dropdown_button_text
