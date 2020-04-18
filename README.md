@@ -8,6 +8,8 @@ This script automatically
 - Unzip them to your git directory
 - Commit and push the difference
 
+[See it in action](https://github.com/MatthieuBizien/roam-to-git-demo)
+
 # Why to use it
 
 - You have a backup if RoamResearch lose some of your data.
@@ -87,7 +89,7 @@ One-liner to run it with a [cron](https://en.wikipedia.org/wiki/Cron) every hour
 
 ## Make it for others
 - [x] Push it to Github
-- [ ] Add example repository
+- [x] Add example repository
 - [x] Make the backup directory configurable
 - [ ] Publicize it
     - [ ] [RoamResearch Slack](https://roamresearch.slack.com/)
