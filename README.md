@@ -40,7 +40,7 @@ cd notes
 mkdir -p .github/workflows/
 curl https://raw.githubusercontent.com/MatthieuBizien/roam-to-git-demo/master/.github/workflows/main.yml > \
     .github/workflows/main.yml
-git add github/workflows/main.yml
+git add .github/workflows/main.yml
 git commit -m "Add github/workflows/main.yml"
 git push --set-upstream origin master
 ```
