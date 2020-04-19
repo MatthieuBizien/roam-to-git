@@ -203,13 +203,19 @@ def _kill_child_process(timeout=50):
         return
     logger.debug("Terminate child process {}", procs)
     for p in procs:
-        p.terminate()
+        try:
+            p.terminate()
+        except psutil.NoSuchProcess:
+            pass
     gone, still_alive = psutil.wait_procs(procs, timeout=timeout)
     if still_alive:
         logger.warning(f"Kill child process {still_alive} that was still alive after "
                        f"'timeout={timeout}' from 'terminate()' command")
         for p in still_alive:
-            p.kill()
+            try:
+                p.kill()
+            except psutil.NoSuchProcess:
+                pass
 
 
 def scrap(markdown_zip_path: Path, json_zip_path: Path, config: Config):
