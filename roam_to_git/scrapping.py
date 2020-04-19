@@ -56,6 +56,13 @@ async def download_rr_archive(output_type: str,
                                      slowMo=slow_motion,
                                      autoClose=False,
                                      )
+    if config.debug:
+        # We want the browser to stay open for debugging the interface
+        pages = await browser.pages()
+        document = pages[0]
+        return await _download_rr_archive(document, output_type, output_directory, config,
+                                          sleep_duration)
+
     try:
         pages = await browser.pages()
         document = pages[0]
@@ -229,7 +236,8 @@ def scrap(markdown_zip_path: Path, json_zip_path: Path, config: Config):
     # Register to always kill child process when the script close, to not have zombie process.
     # Because of https://github.com/miyakogi/pyppeteer/issues/274 without this patch it does happen
     # a lot.
-    atexit.register(_kill_child_process)
+    if not config.debug:
+        atexit.register(_kill_child_process)
     if config.debug:
         for task in tasks:
             # Run sequentially for easier debugging
