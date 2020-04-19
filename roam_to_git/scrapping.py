@@ -121,9 +121,14 @@ async def _download_rr_archive(document: Page,
 
         await asyncio.sleep(sleep_duration)
     assert dot_button is not None
+
+    # Click on something empty to remove the eventual popup
+    # "Sync Quick Capture Notes with Workspace"
+    await document.mouse.click(0, 0)
+
     await dot_button.click()
 
-    logger.debug("Launch popup")
+    logger.debug("Launch download popup")
     divs_pb3 = await document.querySelectorAll(".bp3-fill")
     export_all, = [b for b in divs_pb3 if await get_text(document, b) == 'export all']
     await export_all.click()
