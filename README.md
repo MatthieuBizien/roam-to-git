@@ -1,6 +1,7 @@
 # Automatic RoamResearch backup
 
 ![Roam Research backup](https://github.com/MatthieuBizien/roam-to-git-demo/workflows/Roam%20Research%20backup/badge.svg)
+![roam-to-git tests.py](https://github.com/MatthieuBizien/roam-to-git/workflows/roam-to-git%20tests.py/badge.svg)
 
 This script help you backup your [RoamResearch](https://roamresearch.com/)!
 
