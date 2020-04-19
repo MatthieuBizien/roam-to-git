@@ -19,26 +19,50 @@ This script automatically
 - You have a history of your notes.
 - You can browse your Github repository with a mobile phone.
 
+
 # Use it with Github Actions (recommended)
 
-- Fork this repository  <img src="https://help.github.com/assets/images/help/repository/fork_button.jpg" width="250"/>
+##  Create a (private) Github repository for all your notes
 
-Now in your new repository:
-- Make it private (in settings)
-- Enable Github Action
-- Configure Github secrets (in settings) like in [env.template](env.template)
+With [gh](https://github.com/cli/cli): `gh repo create notes` (yes, it's private)
+
+Or [manually](https://help.github.com/en/github/getting-started-with-github/create-a-repo)
+
+## Configure Github secrets 
+
+- Go to github.com/your/repository/settings/secrets 
+- Add secrets like in [env.template](env.template)
+
+## Add GitHub action
+
+```
+cd notes
+mkdir -p .github/workflows/
+curl https://raw.githubusercontent.com/MatthieuBizien/roam-to-git-demo/master/.github/workflows/main.yml > \
+    .github/workflows/main.yml
+git add github/workflows/main.yml
+git commit -m "Add github/workflows/main.yml"
+git push --set-upstream origin master
+```
+
+## Check that the Github Action works
+
+- Go to github.com/your/repository/actions
+- Your CI job should start in a few seconds
+
 
 # Use it locally
 
-## Setup
+**Note**: if your file system is not case-sensitive, you will not backup notes that have the same name in different 
+cases
 
-### Install Roam-To-Git
+## Install Roam-To-Git
 With [pipx](https://github.com/pipxproject/pipx) 
 (if you don't know pipx, you should look at it, it's wonderful!)
 
 `pipx install git+https://github.com/MatthieuBizien/roam-to-git.git`
 
-### Create a (private) Github repository for all your notes
+## Create a (private) Github repository for all your notes
 
 With [gh](https://github.com/cli/cli): `gh repo create notes` (yes, it's private)
 
@@ -46,7 +70,7 @@ Or [manually](https://help.github.com/en/github/getting-started-with-github/crea
 
 Then run `git push --set-upstream origin master`
 
-### Configure environment variables
+## Configure environment variables
 
 - `curl https://raw.githubusercontent.com/MatthieuBizien/roam-to-git/master/env.template > notes/.env`
 - Fill the .env file: `vi .env`
@@ -98,9 +122,6 @@ One-liner to run it with a [cron](https://en.wikipedia.org/wiki/Cron) every hour
     - [ ] [RoamResearch Slack](https://roamresearch.slack.com/)
     - [ ] [RoamResearch Reddit](https://www.reddit.com/r/RoamResearch/)
     - [ ] Twitter
-
-## Add features
-- [ ] Add automatic Google Keep retrieval
 
 ## Some ideas, I don't need it, but PR welcome 😀
 - [ ] Test it/make it work on Windows
