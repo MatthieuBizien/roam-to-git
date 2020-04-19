@@ -40,7 +40,7 @@ def main():
         git_path = Path(args.directory).absolute()
 
     if (git_path / ".env").exists():
-        logger.debug("Loading secrets from {}", git_path / ".env")
+        logger.info("Loading secrets from {}", git_path / ".env")
         load_dotenv(git_path / ".env", override=True)
     else:
         logger.debug("No secret found at {}", git_path / ".env")
