@@ -29,6 +29,8 @@ def main():
     parser.add_argument("--skip-git", action="store_true",
                         help="Consider the repository as just a directory, and don't do any "
                              "git-related action.")
+    parser.add_argument("--skip-push", action="store_true",
+                        help="Don't git push after commit.")
     parser.add_argument("--skip-fetch", action="store_true",
                         help="Do not download the data from Roam, just update the formatting.")
     args = parser.parse_args()
@@ -80,7 +82,8 @@ def main():
 
     if repo is not None:
         commit_git_directory(repo)
-        push_git_repository(repo)
+        if not args.skip_push:
+            push_git_repository(repo)
 
 
 if __name__ == "__main__":
