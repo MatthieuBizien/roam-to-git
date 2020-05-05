@@ -33,7 +33,7 @@ async def get_text(page, b, norm=True):
 
 
 class Config:
-    def __init__(self, database: Optional[str], debug: bool):
+    def __init__(self, database: Optional[str], debug: bool, sleep_duration: float = 2.):
         self.user = os.environ["ROAMRESEARCH_USER"]
         self.password = os.environ["ROAMRESEARCH_PASSWORD"]
         assert self.user
@@ -43,12 +43,12 @@ class Config:
         else:
             self.database = os.environ.get("ROAMRESEARCH_DATABASE")
         self.debug = debug
+        self.sleep_duration = sleep_duration
 
 
 async def download_rr_archive(output_type: str,
                               output_directory: Path,
                               config: Config,
-                              sleep_duration=1.,
                               slow_motion=10,
                               ):
     logger.debug("Creating browser")
@@ -60,14 +60,12 @@ async def download_rr_archive(output_type: str,
         # We want the browser to stay open for debugging the interface
         pages = await browser.pages()
         document = pages[0]
-        return await _download_rr_archive(document, output_type, output_directory, config,
-                                          sleep_duration)
+        return await _download_rr_archive(document, output_type, output_directory, config)
 
     try:
         pages = await browser.pages()
         document = pages[0]
-        return await _download_rr_archive(document, output_type, output_directory, config,
-                                          sleep_duration)
+        return await _download_rr_archive(document, output_type, output_directory, config)
     except (KeyboardInterrupt, SystemExit):
         logger.debug("Closing browser on interrupt {}", output_type)
         await browser.close()
@@ -83,13 +81,11 @@ async def _download_rr_archive(document: Page,
                                output_type: str,
                                output_directory: Path,
                                config: Config,
-                               sleep_duration=1.,
                                ):
     """Download an archive in RoamResearch.
 
     :param output_type: Download JSON or Markdown
     :param output_directory: Directory where to stock the outputs
-    :param sleep_duration: How many seconds to wait after the clicks
     """
     if not config.debug:
         logger.debug("Configure downloads to {}", output_directory)
@@ -97,7 +93,7 @@ async def _download_rr_archive(document: Page,
         await cdp.send('Page.setDownloadBehavior',
                        {'behavior': 'allow', 'downloadPath': str(output_directory)})
 
-    await signin(document, config, sleep_duration=sleep_duration)
+    await signin(document, config, sleep_duration=config.sleep_duration)
 
     if config.database:
         await go_to_database(document, config.database)
@@ -119,8 +115,9 @@ async def _download_rr_archive(document: Page,
                     "--database")
                 sys.exit(1)
 
-        await asyncio.sleep(sleep_duration)
-    assert dot_button is not None
+        await asyncio.sleep(config.sleep_duration)
+    assert dot_button is not None, "All roads leads to Roam, but that one is too long. Try " \
+                                   "again when Roam servers are faster."
 
     # Click on something empty to remove the eventual popup
     # "Sync Quick Capture Notes with Workspace"
@@ -132,7 +129,7 @@ async def _download_rr_archive(document: Page,
     divs_pb3 = await document.querySelectorAll(".bp3-fill")
     export_all, = [b for b in divs_pb3 if await get_text(document, b) == 'export all']
     await export_all.click()
-    await asyncio.sleep(sleep_duration)
+    await asyncio.sleep(config.sleep_duration)
 
     async def get_dropdown_button():
         dropdown_button = await document.querySelector(".bp3-button-text")
@@ -148,12 +145,12 @@ async def _download_rr_archive(document: Page,
     if button_text != output_type:
         logger.debug("Changing output type to {}", output_type)
         await button.click()
-        await asyncio.sleep(sleep_duration)
+        await asyncio.sleep(config.sleep_duration)
         output_type_elem, = await document.querySelectorAll(".bp3-text-overflow-ellipsis")
         await output_type_elem.click()
 
         # defensive check
-        await asyncio.sleep(sleep_duration)
+        await asyncio.sleep(config.sleep_duration)
         _, button_text_ = await get_dropdown_button()
         assert button_text_ == output_type, (button_text_, output_type)
 

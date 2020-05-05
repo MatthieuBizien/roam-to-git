@@ -34,6 +34,10 @@ def main():
                         help="Don't git push after commit.")
     parser.add_argument("--skip-fetch", action="store_true",
                         help="Do not download the data from Roam, just update the formatting.")
+    parser.add_argument("--sleep-duration", type=float, default=2.,
+                        help="Duration to wait for the interface. We wait 100x that duration for"
+                             "Roam to load. Increase it if Roam servers are slow, but be careful"
+                             "with the free tier of Github Actions.")
     args = parser.parse_args()
 
     patch_pyppeteer()
@@ -51,7 +55,7 @@ def main():
         logger.error("Please define ROAMRESEARCH_USER and ROAMRESEARCH_PASSWORD, "
                      "in the .env file of your notes repository, or in environment variables")
         sys.exit(1)
-    config = Config(args.database, debug=args.debug)
+    config = Config(args.database, debug=args.debug, sleep_duration=float(args.sleep_duration))
 
     if args.skip_git:
         repo = None
