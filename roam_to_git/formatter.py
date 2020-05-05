@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import List, Match, Tuple, Dict
 
 
-def format_markdown_archive(raw_directory: Path) -> Dict[str, str]:
+def read_markdown_directory(raw_directory: Path) -> Dict[str, str]:
     contents = {}
     for file in raw_directory.iterdir():
         if not file.is_file():
@@ -16,17 +16,21 @@ def format_markdown_archive(raw_directory: Path) -> Dict[str, str]:
         parts = file.parts[len(raw_directory.parts):]
         file_name = os.path.join(*parts)
         contents[file_name] = content
-    return format_markdown(contents)
+    return contents
 
 
-def format_markdown(contents: Dict[str, str]) -> Dict[str, str]:
+def get_back_links(contents: Dict[str, str]) -> Dict[str, List[Tuple[str, Match]]]:
     # Extract backlinks from the markdown
     forward_links = {file_name: extract_links(content) for file_name, content in contents.items()}
     back_links: Dict[str, List[Tuple[str, Match]]] = defaultdict(list)
     for file_name, links in forward_links.items():
         for link in links:
             back_links[f"{link.group(1)}.md"].append((file_name, link))
+    return back_links
 
+
+def format_markdown(contents: Dict[str, str]) -> Dict[str, str]:
+    back_links = get_back_links(contents)
     # Format and write the markdown files
     out = {}
     for file_name, content in contents.items():
