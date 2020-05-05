@@ -119,7 +119,7 @@ One-liner to run it with a [cron](https://en.wikipedia.org/wiki/Cron) every hour
 - [x] Add example repository
 - [x] Make the backup directory configurable
 - [ ] Publicize it
-    - [ ] [RoamResearch Slack](https://roamresearch.slack.com/)
+    - [x] [RoamResearch Slack](https://roamresearch.slack.com/) [thread](https://roamresearch.slack.com/archives/CN5MK4D2M/p1588670473431200)
     - [ ] [RoamResearch Reddit](https://www.reddit.com/r/RoamResearch/)
     - [ ] Twitter
 
