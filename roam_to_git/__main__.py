@@ -16,7 +16,7 @@ from roam_to_git.fs import reset_git_directory, unzip_markdown_archive, \
 from roam_to_git.scrapping import patch_pyppeteer, scrap, Config
 
 
-@logger.catch()
+@logger.catch(reraise=True)
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("directory", default=None, nargs="?",
