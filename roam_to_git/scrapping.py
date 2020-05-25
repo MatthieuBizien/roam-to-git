@@ -102,11 +102,13 @@ async def _download_rr_archive(document: Page,
     dot_button = None
     for _ in range(100):
         # Starting is a little bit slow, so we wait for the button that signal it's ok
+        await asyncio.sleep(config.sleep_duration)
         dot_button = await document.querySelector(".bp3-icon-more")
         if dot_button is not None:
             break
 
         # If we have multiple databases, we will be stuck. Let's detect that.
+        await asyncio.sleep(config.sleep_duration)
         strong = await document.querySelector("strong")
         if strong:
             if "database's you are an admin of" == await get_text(document, strong):
@@ -115,7 +117,6 @@ async def _download_rr_archive(document: Page,
                     "--database")
                 sys.exit(1)
 
-        await asyncio.sleep(config.sleep_duration)
     assert dot_button is not None, "All roads leads to Roam, but that one is too long. Try " \
                                    "again when Roam servers are faster."
 
