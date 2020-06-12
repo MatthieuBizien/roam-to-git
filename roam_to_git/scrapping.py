@@ -41,7 +41,8 @@ class Config:
         if database:
             self.database: Optional[str] = database
         else:
-            self.database = os.environ.get("ROAMRESEARCH_DATABASE")
+            self.database = os.environ["ROAMRESEARCH_DATABASE"]
+        assert self.database, "Please define the Roam database you want to backup."
         self.debug = debug
         self.sleep_duration = sleep_duration
 
