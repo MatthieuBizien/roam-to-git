@@ -109,7 +109,7 @@ One-liner to run it with a [cron](https://en.wikipedia.org/wiki/Cron) every hour
 ### Backlink formatting
 - [x] Add backlinks reference to the notes files
 - [x] Integrate the context into the backlink
-- [ ] Manage `/` in file names
+- [x] Manage `/` in file names
 
 ### Other formatting
 - [x] Format `{{TODO}}` to be compatible with Github markdown

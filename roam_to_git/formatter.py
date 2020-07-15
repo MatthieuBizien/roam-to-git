@@ -3,12 +3,17 @@ import re
 from collections import defaultdict
 from itertools import takewhile
 from pathlib import Path
-from typing import List, Match, Tuple, Dict
+from typing import Dict, List, Match, Tuple
 
 
 def read_markdown_directory(raw_directory: Path) -> Dict[str, str]:
     contents = {}
     for file in raw_directory.iterdir():
+        if file.is_dir():
+            # We recursively add the content of sub-directories.
+            # They exists when there is a / in the note name.
+            for child_name, content in read_markdown_directory(file).items():
+                contents[f"{file.name}/{child_name}"] = content
         if not file.is_file():
             continue
         with file.open(encoding="utf-8") as f:
@@ -40,7 +45,8 @@ def format_markdown(contents: Dict[str, str]) -> Dict[str, str]:
 
         # Format content. Backlinks content will be formatted automatically.
         content = format_to_do(content)
-        content = format_link(content)
+        link_prefix = "../" * sum("/" in char for char in file_name)
+        content = format_link(content, link_prefix=link_prefix)
         if len(content) > 0:
             out[file_name] = content
 
@@ -90,8 +96,12 @@ def add_back_links(content: str, back_links: List[Tuple[str, Match]]) -> str:
     return f"{content}\n# Backlinks\n{backlinks_str}\n"
 
 
-def format_link(string: str) -> str:
-    """Transform a RoamResearch-like link to a Markdown link."""
+def format_link(string: str, link_prefix="") -> str:
+    """Transform a RoamResearch-like link to a Markdown link.
+
+    @param link_prefix: Add the given prefix before all links.
+        WARNING: not robust to special characters.
+    """
     # Regex are read-only and can't parse [[[[recursive]] [[links]]]], but they do the job.
     # We use a special syntax for links that can have SPACES in them
     # Format internal reference: [[mynote]]
@@ -99,15 +109,18 @@ def format_link(string: str) -> str:
                     # TODO: manage a single ] in the tag
                     r"([^\]\n]+)"  # Everything except ]
                     r"\]\]",
-                    r"[\1](<\1.md>)", string, flags=re.MULTILINE)
+                    rf"[\1](<{link_prefix}\1.md>)",
+                    string, flags=re.MULTILINE)
 
     # Format hashtags: #mytag
-    string = re.sub(r"#([a-zA-Z-_0-9]+)", r"[\1](<\1.md>)", string, flags=re.MULTILINE)
+    string = re.sub(r"#([a-zA-Z-_0-9]+)",
+                    rf"[\1](<{link_prefix}\1.md>)",
+                    string, flags=re.MULTILINE)
 
     # Format attributes
     string = re.sub(r"(^ *- )"  # Match the beginning, like '  - '
                     r"(([^:\n]|:[^:\n])+)"  # Match everything except ::
                     r"::",
-                    r"\1**[\2](<\2.md>):**",  # Format Markdown link
+                    rf"\1**[\2](<{link_prefix}\2.md>):**",  # Format Markdown link
                     string, flags=re.MULTILINE)
     return string

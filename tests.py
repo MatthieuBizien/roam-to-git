@@ -5,7 +5,7 @@ from typing import List
 
 import mypy.api
 
-from roam_to_git.formatter import format_to_do, extract_links, format_link
+from roam_to_git.formatter import extract_links, format_link, format_to_do
 
 
 class TestFormatTodo(unittest.TestCase):
@@ -27,6 +27,7 @@ class TestFormatTodo(unittest.TestCase):
 
 class TestFormatLinks(unittest.TestCase):
     """Test that we correctly format the links"""
+
     def test_empty(self):
         self.assertEqual(format_link(""), "")
 
@@ -35,6 +36,10 @@ class TestFormatLinks(unittest.TestCase):
 
     def test_one_link(self):
         self.assertEqual(format_link("string [[link]]."), "string [link](<link.md>).")
+
+    def test_one_link_prefix(self):
+        self.assertEqual(format_link("string [[link]].", link_prefix="../../"),
+                         "string [link](<../../link.md>).")
 
     def test_two_links(self):
         self.assertEqual(format_link("[[link]] [[other]]"),
