@@ -1,5 +1,7 @@
 from distutils.core import setup
 
+from pkg_resources import parse_requirements
+
 setup(
     name='roam_to_git',
     packages=['roam_to_git'],
@@ -11,13 +13,8 @@ setup(
     url='https://github.com/MatthieuBizien/roam-to-git',
     download_url='https://github.com/MatthieuBizien/roam-to-git/archive/v0.1.tar.gz',
     keywords=['ROAMRESEARCH', 'GIT', 'BACKUP'],
-    install_requires=[
-        'gitpython',
-        'loguru',
-        'pyppeteer',
-        'python-dotenv',
-        'psutil'
-    ],
+    install_requires=[str(requirement) for requirement in
+                      parse_requirements(open("requirements.txt"))],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',

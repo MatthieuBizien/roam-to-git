@@ -2,6 +2,7 @@ logs
 notes
 downloads
 venv/
+env/
 **.pyc
 .env
 .mypy_cache/
