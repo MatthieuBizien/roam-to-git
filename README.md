@@ -32,7 +32,20 @@ Or [manually](https://help.github.com/en/github/getting-started-with-github/crea
 ## Configure Github secrets 
 
 - Go to github.com/your/repository/settings/secrets 
-- Add secrets like in [env.template](env.template)
+
+###
+
+Add 3 (separate) secrets where the names are 
+
+`ROAMRESEARCH_USER`
+
+`ROAMRESEARCH_PASSWORD`
+
+`ROAMRESEARCH_DATABASE`
+
+- Refer to [env.template](env.template) for more information
+
+- when inserting the information, there is no need for quotations or assignments
 
 ## Add GitHub action
 
@@ -50,6 +63,10 @@ git push --set-upstream origin master
 
 - Go to github.com/your/repository/actions
 - Your CI job should start in a few seconds
+
+### Note:
+
+If the backup does not automatically start, try pushing to the repository again
 
 
 # Use it locally
