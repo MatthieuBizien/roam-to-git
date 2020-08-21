@@ -106,6 +106,23 @@ One-liner to run it with a [cron](https://en.wikipedia.org/wiki/Cron) every hour
 
 NB: there are [issues](https://github.com/MatthieuBizien/roam-to-git/issues/43) on Mac with a crontab.
 
+# Debug
+
+Making `roam-to-git` foolproof is hard, as it depends on Roam, on Github Action or the local environment, 
+on software not very stable (`pyppeteer` we still love you 😉 )
+and on the correct user configuration.
+
+For debugging, please try the following:
+
+- Check that the environment variables `ROAMRESEARCH_USER`, `ROAMRESEARCH_PASSWORD`, `ROAMRESEARCH_DATABASE` are correctly setup
+- Login into Roam using the username and the password. 
+You may want to ask a new password if you have enabled Google Login, as it solved some user problems.
+- Run `roam-to-git --debug` to check the authentification and download work
+- Look at the traceback
+- Look for similar issues
+- If nothing else work, create a new issue with as many details as possible. 
+I will try my best to understand and help you, no SLA promised 😇
+
 # Task list
 
 ## Backup all RoamResearch data
