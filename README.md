@@ -104,6 +104,8 @@ Then run `git push --set-upstream origin master`
 One-liner to run it with a [cron](https://en.wikipedia.org/wiki/Cron) every hours: 
 `echo "0 *  *  *  *  '$(which roam-to-git)' '$(pwd)/notes'" | crontab -`
 
+NB: there are [issues](https://github.com/MatthieuBizien/roam-to-git/issues/43) on Mac with a crontab.
+
 # Task list
 
 ## Backup all RoamResearch data
