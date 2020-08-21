@@ -47,6 +47,9 @@ Add 3 (separate) secrets where the names are
 
 - when inserting the information, there is no need for quotations or assignments
 
+![image](https://user-images.githubusercontent.com/173090/90904133-2cf1c900-e3cf-11ea-960d-71d0543b8158.png)
+
+
 ## Add GitHub action
 
 ```
