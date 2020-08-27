@@ -3,22 +3,22 @@
 [![Roam Research backup](https://github.com/MatthieuBizien/roam-to-git-demo/workflows/Roam%20Research%20backup/badge.svg)](https://github.com/MatthieuBizien/roam-to-git-demo/actions)
 [![roam-to-git tests.py](https://github.com/MatthieuBizien/roam-to-git/workflows/roam-to-git%20tests.py/badge.svg)](https://github.com/MatthieuBizien/roam-to-git/actions)
 
-This script help you backup your [RoamResearch](https://roamresearch.com/)!
+This script helps you backup your [RoamResearch](https://roamresearch.com/) graphs!
 
 This script automatically
-- Download a markdown archive of your RoamResearch workspace
-- Download a json archive of your RoamResearch workspace
-- Unzip them to your git directory
-- Commit and push the difference
+- Downloads a markdown archive of your RoamResearch workspace
+- Downloads a json archive of your RoamResearch workspace
+- Unzips them to your git directory
+- Commits and pushes the difference to Github
 
 # Demo
-[See it in action!](https://github.com/MatthieuBizien/roam-to-git-demo). That repo is updated using roam-to-git.
+[See it in action!](https://github.com/MatthieuBizien/roam-to-git-demo). This repo is updated using roam-to-git.
 
 # Why to use it
 
-- You have a backup if RoamResearch lose some of your data.
+- You have a backup if RoamResearch loses some of your data.
 - You have a history of your notes.
-- You can browse your Github repository with a mobile phone.
+- You can browse your Github repository easily with a mobile device
 
 
 # Use it with Github Actions (recommended)
