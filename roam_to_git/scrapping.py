@@ -134,7 +134,7 @@ async def _download_rr_archive(document: Page,
     await asyncio.sleep(config.sleep_duration)
 
     async def get_dropdown_button():
-        dropdown_button = await document.querySelector(".bp3-button-text")
+        dropdown_button = await document.querySelector(".bp3-dialog .bp3-button-text")
         assert dropdown_button is not None
         dropdown_button_text = await get_text(document, dropdown_button)
         # Defensive check if the interface change
