@@ -53,13 +53,14 @@ Add 3 (separate) secrets where the names are
 ## Add GitHub action
 
 ```
+# assuming you chose notes as the name of your backup repository. otherwise, replace it with your repository name
 cd notes
 mkdir -p .github/workflows/
 curl https://raw.githubusercontent.com/MatthieuBizien/roam-to-git-demo/master/.github/workflows/main.yml > \
     .github/workflows/main.yml
 git add .github/workflows/main.yml
 git commit -m "Add github/workflows/main.yml"
-git push --set-upstream origin master
+git push --set-upstream origin main
 ```
 
 ## Check that the Github Action works
