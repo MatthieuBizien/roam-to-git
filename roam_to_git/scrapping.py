@@ -188,7 +188,7 @@ async def signin(document, config: Config, sleep_duration=1.):
     email_elem = await document.querySelector("input[name='email']")
     await email_elem.click()
     await email_elem.type(config.user)
-
+    await document.waitFor("input[name='email']")
     logger.debug("Fill password")
     passwd_elem = await document.querySelector("input[name='password']")
     await passwd_elem.click()

@@ -34,7 +34,7 @@ def main():
                         help="Don't git push after commit.")
     parser.add_argument("--skip-fetch", action="store_true",
                         help="Do not download the data from Roam, just update the formatting.")
-    parser.add_argument("--sleep-duration", type=float, default=2.,
+    parser.add_argument("--sleep-duration", type=float, default=5.,
                         help="Duration to wait for the interface. We wait 100x that duration for"
                              "Roam to load. Increase it if Roam servers are slow, but be careful"
                              "with the free tier of Github Actions.")
