@@ -65,15 +65,18 @@ def main():
 
     reset_git_directory(git_path / "formatted")
     if not args.skip_fetch:
+        reset_git_directory(git_path / "edn")
         reset_git_directory(git_path / "json")
         reset_git_directory(git_path / "markdown")
 
         with tempfile.TemporaryDirectory() as markdown_zip_path, \
-                tempfile.TemporaryDirectory() as json_zip_path:
+                tempfile.TemporaryDirectory() as json_zip_path, \
+                tempfile.TemporaryDirectory() as edn_zip_path,:
             markdown_zip_path = Path(markdown_zip_path)
             json_zip_path = Path(json_zip_path)
+            edn_zip_path = Path(edn_zip_path)
 
-            scrap(markdown_zip_path, json_zip_path, config)
+            scrap(markdown_zip_path, json_zip_path, edn_zip_path, config)
             if config.debug:
                 logger.debug("waiting for the download...")
                 time.sleep(20)

@@ -71,6 +71,19 @@ def unzip_and_save_json_archive(zip_dir_path: Path, directory: Path):
                 json.dump(content, f, sort_keys=True, indent=2, ensure_ascii=True)
 
 
+def unzip_and_save_edn_archive(zip_dir_path: Path, directory: Path):
+    logger.debug("Saving edn to {}", directory)
+    directory.mkdir(exist_ok=True)
+    zip_path = get_zip_path(zip_dir_path)
+    with zipfile.ZipFile(zip_path) as zip_file:
+        files = list(zip_file.namelist())
+        for file in files:
+            assert file.endswith(".edn")
+            content = zip_file.read(file)
+            with open(directory / file, "w") as f:
+                f.write(content)
+
+
 def commit_git_directory(repo: git.Repo):
     """Add an automatic commit in a git directory if it has changed, and push it"""
     if not repo.is_dirty() and not repo.untracked_files:
