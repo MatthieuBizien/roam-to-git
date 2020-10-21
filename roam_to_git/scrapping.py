@@ -148,8 +148,9 @@ async def _download_rr_archive(document: Page,
         logger.debug("Changing output type to {}", output_type)
         await button.click()
         await asyncio.sleep(config.sleep_duration)
-        output_type_elem, = await document.querySelectorAll(".bp3-text-overflow-ellipsis")
-        await output_type_elem.click()
+        output_type_elems = await document.querySelectorAll(".bp3-text-overflow-ellipsis")
+        output_type_elem, = [e for e in output_type_elems if await get_text(document, e) == output_type]
+		await output_type_elem.click()
 
         # defensive check
         await asyncio.sleep(config.sleep_duration)
@@ -188,7 +189,7 @@ async def signin(document, config: Config, sleep_duration=1.):
     email_elem = await document.querySelector("input[name='email']")
     await email_elem.click()
     await email_elem.type(config.user)
-
+    await document.waitFor("input[name='email']")
     logger.debug("Fill password")
     passwd_elem = await document.querySelector("input[name='password']")
     await passwd_elem.click()
