@@ -12,7 +12,7 @@ from loguru import logger
 
 from roam_to_git.formatter import read_markdown_directory, format_markdown
 from roam_to_git.fs import reset_git_directory, unzip_markdown_archive, \
-    unzip_and_save_json_archive, commit_git_directory, push_git_repository, save_markdowns
+    unzip_and_save_json_archive, unzip_and_save_edn_archive, commit_git_directory, push_git_repository, save_markdowns
 from roam_to_git.scrapping import patch_pyppeteer, scrap, Config
 
 
