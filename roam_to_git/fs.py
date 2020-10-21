@@ -80,7 +80,7 @@ def unzip_and_save_edn_archive(zip_dir_path: Path, directory: Path):
         for file in files:
             assert file.endswith(".edn")
             content = zip_file.read(file)
-            with open(directory / file, "w") as f:
+            with open(directory / file, "wb") as f:
                 f.write(content)
 
 
