@@ -71,7 +71,7 @@ def main():
 
         with tempfile.TemporaryDirectory() as markdown_zip_path, \
                 tempfile.TemporaryDirectory() as json_zip_path, \
-                tempfile.TemporaryDirectory() as edn_zip_path,:
+                tempfile.TemporaryDirectory() as edn_zip_path:
             markdown_zip_path = Path(markdown_zip_path)
             json_zip_path = Path(json_zip_path)
             edn_zip_path = Path(edn_zip_path)
