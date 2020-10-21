@@ -85,7 +85,7 @@ async def _download_rr_archive(document: Page,
                                ):
     """Download an archive in RoamResearch.
 
-    :param output_type: Download JSON or Markdown
+    :param output_type: Download JSON or Markdown or EDN
     :param output_directory: Directory where to stock the outputs
     """
     if not config.debug:
@@ -138,7 +138,7 @@ async def _download_rr_archive(document: Page,
         assert dropdown_button is not None
         dropdown_button_text = await get_text(document, dropdown_button)
         # Defensive check if the interface change
-        assert dropdown_button_text in ["markdown", "json"], dropdown_button_text
+        assert dropdown_button_text in ["markdown", "json", "edn"], dropdown_button_text
         return dropdown_button, dropdown_button_text
 
     logger.debug("Checking download type")
@@ -230,13 +230,15 @@ def _kill_child_process(timeout=50):
                 pass
 
 
-def scrap(markdown_zip_path: Path, json_zip_path: Path, config: Config):
+def scrap(markdown_zip_path: Path, json_zip_path: Path, edn_zip_path: Path, config: Config):
     # Just for easier run from the CLI
     markdown_zip_path = Path(markdown_zip_path)
     json_zip_path = Path(json_zip_path)
+    edn_zip_path = Path(edn_zip_path)
 
     tasks = [download_rr_archive("markdown", Path(markdown_zip_path), config=config),
              download_rr_archive("json", Path(json_zip_path), config=config),
+             download_rr_archive("edn", Path(edn_zip_path), config=config),
              ]
     # Register to always kill child process when the script close, to not have zombie process.
     # Because of https://github.com/miyakogi/pyppeteer/issues/274 without this patch it does happen
