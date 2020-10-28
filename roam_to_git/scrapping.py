@@ -96,6 +96,7 @@ async def _download_rr_archive(document: Page,
                        {'behavior': 'allow', 'downloadPath': str(output_directory)})
 
     await signin(document, config, sleep_duration=config.sleep_duration)
+    await document.screenshot({'path': '/tmp/signin_{}.png'.format(output_type)  })
 
     if config.database:
         await go_to_database(document, config.database)
@@ -188,6 +189,8 @@ async def signin(document, config: Config, sleep_duration=4.):
     logger.debug("Opening signin page")
     await document.goto('https://roamresearch.com/#/signin')
     await asyncio.sleep(sleep_duration)
+    # The please pay screen shows for a moment, need to pass it
+    await asyncio.sleep(sleep_duration)
 
     logger.debug("Fill email '{}'", config.user)
     email_elem = await document.querySelector("input[name='email']")
@@ -202,6 +205,7 @@ async def signin(document, config: Config, sleep_duration=4.):
     logger.debug("Click on sign-in")
     buttons = await document.querySelectorAll('button')
     signin_confirm, = [b for b in buttons if await get_text(document, b) == 'sign in']
+
     await signin_confirm.click()
     await asyncio.sleep(sleep_duration)
 
