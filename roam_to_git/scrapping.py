@@ -119,6 +119,9 @@ async def _download_rr_archive(document: Page,
                     "--database")
                 sys.exit(1)
 
+    
+    await document.screenshot({'path': '/tmp/wait_for_interface_{}.png'.format(output_type)  })
+
     assert dot_button is not None, "All roads leads to Roam, but that one is too long. Try " \
                                    "again when Roam servers are faster."
 
