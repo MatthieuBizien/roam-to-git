@@ -189,7 +189,7 @@ async def signin(document, config: Config, sleep_duration=4.):
     logger.debug("Opening signin page")
     await document.goto('https://roamresearch.com/#/signin')
     await asyncio.sleep(sleep_duration)
-    # The please pay screen shows for a moment, need to pass it
+    # If we are too quick nothing gets entered into username
     await asyncio.sleep(sleep_duration)
 
     logger.debug("Fill email '{}'", config.user)
