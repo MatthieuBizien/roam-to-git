@@ -33,7 +33,7 @@ async def get_text(page, b, norm=True):
 
 
 class Config:
-    def __init__(self, database: Optional[str], debug: bool, sleep_duration: float = 2.):
+    def __init__(self, database: Optional[str], debug: bool, sleep_duration: float = 10.):
         self.user = os.environ["ROAMRESEARCH_USER"]
         self.password = os.environ["ROAMRESEARCH_PASSWORD"]
         assert self.user
@@ -56,6 +56,7 @@ async def download_rr_archive(output_type: str,
     browser = await pyppeteer.launch(devtools=config.debug,
                                      slowMo=slow_motion,
                                      autoClose=False,
+                                     args=['--single-process', '--enable-logging']
                                      )
     if config.debug:
         # We want the browser to stay open for debugging the interface
@@ -101,7 +102,7 @@ async def _download_rr_archive(document: Page,
 
     logger.debug("Wait for interface to load")
     dot_button = None
-    for _ in range(100):
+    for _ in range(40):
         # Starting is a little bit slow, so we wait for the button that signal it's ok
         await asyncio.sleep(config.sleep_duration)
         dot_button = await document.querySelector(".bp3-icon-more")
@@ -179,7 +180,7 @@ async def _download_rr_archive(document: Page,
     raise FileNotFoundError("Impossible to download {} in {}", output_type, output_directory)
 
 
-async def signin(document, config: Config, sleep_duration=1.):
+async def signin(document, config: Config, sleep_duration=4.):
     """Sign-in into Roam"""
     logger.debug("Opening signin page")
     await document.goto('https://roamresearch.com/#/signin')
