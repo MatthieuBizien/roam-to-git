@@ -3,12 +3,14 @@ import atexit
 import os
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 import psutil
 import pyppeteer.connection
 from loguru import logger
 from pyppeteer.page import Page
+
+ROAM_FORMATS = ("json", "markdown", "edn")
 
 
 def patch_pyppeteer():
@@ -138,7 +140,7 @@ async def _download_rr_archive(document: Page,
         assert dropdown_button is not None
         dropdown_button_text = await get_text(document, dropdown_button)
         # Defensive check if the interface change
-        assert dropdown_button_text in ["markdown", "json", "edn"], dropdown_button_text
+        assert dropdown_button_text in ROAM_FORMATS, dropdown_button_text
         return dropdown_button, dropdown_button_text
 
     logger.debug("Checking download type")
@@ -231,16 +233,15 @@ def _kill_child_process(timeout=50):
                 pass
 
 
-def scrap(markdown_zip_path: Path, json_zip_path: Path, edn_zip_path: Path, config: Config):
-    # Just for easier run from the CLI
-    markdown_zip_path = Path(markdown_zip_path)
-    json_zip_path = Path(json_zip_path)
-    edn_zip_path = Path(edn_zip_path)
+def scrap(zip_path: Path, formats: List[str], config: Config):
+    tasks = []
+    for f in formats:
+        format_zip_path = zip_path / f
+        format_zip_path.mkdir(exist_ok=True)
+        tasks.append(
+            download_rr_archive(f, format_zip_path, config=config)
+        )
 
-    tasks = [download_rr_archive("markdown", Path(markdown_zip_path), config=config),
-             download_rr_archive("json", Path(json_zip_path), config=config),
-             download_rr_archive("edn", Path(edn_zip_path), config=config),
-             ]
     # Register to always kill child process when the script close, to not have zombie process.
     # Because of https://github.com/miyakogi/pyppeteer/issues/274 without this patch it does happen
     # a lot.
