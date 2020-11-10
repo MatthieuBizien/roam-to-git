@@ -16,8 +16,7 @@ def read_markdown_directory(raw_directory: Path) -> Dict[str, str]:
                 contents[f"{file.name}/{child_name}"] = content
         if not file.is_file():
             continue
-        with file.open(encoding="utf-8") as f:
-            content = file.read_text(encoding="utf-8")
+        content = file.read_text(encoding="utf-8")
         parts = file.parts[len(raw_directory.parts):]
         file_name = os.path.join(*parts)
         contents[file_name] = content
