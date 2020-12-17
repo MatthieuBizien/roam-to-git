@@ -24,6 +24,9 @@ def patch_pyppeteer():
     pyppeteer.connection.websockets.client.connect = new_method
 
 
+TIMEOUT = 10 * 60_000  # Time in ms
+
+
 async def get_text(page, b, norm=True):
     """Get the inner text of an element"""
     text = await page.evaluate('(element) => element.textContent', b)
@@ -101,22 +104,24 @@ async def _download_rr_archive(document: Page,
 
     logger.debug("Wait for interface to load")
     dot_button = None
-    for _ in range(100):
-        # Starting is a little bit slow, so we wait for the button that signal it's ok
-        await asyncio.sleep(config.sleep_duration)
-        dot_button = await document.querySelector(".bp3-icon-more")
-        if dot_button is not None:
-            break
+    # Starting is a little bit slow, so we wait for the button that signal it's ok
+    await asyncio.sleep(config.sleep_duration)
+    dot_button = await querySelector(document, ".bp3-icon-more")
 
+    if dot_button is None:
         # If we have multiple databases, we will be stuck. Let's detect that.
         await asyncio.sleep(config.sleep_duration)
-        strong = await document.querySelector("strong")
+        strong = await querySelector(document, "strong")
         if strong:
             if "database's you are an admin of" == await get_text(document, strong):
                 logger.error(
                     "You seems to have multiple databases. Please select it with the option "
-                    "--database")
+                    "--database or the environment variable ROAMRESEARCH_DATABASE")
                 sys.exit(1)
+        else:
+            logger.error("Failed to download the page. If it **always** happens, please fill a"
+                         "detailed bug report on "
+                         "https://github.com/MatthieuBizien/roam-to-git/issues")
 
     assert dot_button is not None, "All roads leads to Roam, but that one is too long. Try " \
                                    "again when Roam servers are faster."
@@ -124,17 +129,18 @@ async def _download_rr_archive(document: Page,
     # Click on something empty to remove the eventual popup
     # "Sync Quick Capture Notes with Workspace"
     await document.mouse.click(0, 0)
+    await document.waitForNavigation({"timeout": TIMEOUT})
 
-    await dot_button.click()
+    await click(dot_button)
 
     logger.debug("Launch download popup")
-    divs_pb3 = await document.querySelectorAll(".bp3-fill")
+    divs_pb3 = await querySelectorAll(document, ".bp3-fill")
     export_all, = [b for b in divs_pb3 if await get_text(document, b) == 'export all']
-    await export_all.click()
+    await click(export_all)
     await asyncio.sleep(config.sleep_duration)
 
     async def get_dropdown_button():
-        dropdown_button = await document.querySelector(".bp3-dialog .bp3-button-text")
+        dropdown_button = await querySelector(document, ".bp3-dialog .bp3-button-text")
         assert dropdown_button is not None
         dropdown_button_text = await get_text(document, dropdown_button)
         # Defensive check if the interface change
@@ -146,12 +152,12 @@ async def _download_rr_archive(document: Page,
 
     if button_text != output_type:
         logger.debug("Changing output type to {}", output_type)
-        await button.click()
+        await click(button)
         await asyncio.sleep(config.sleep_duration)
-        output_type_elems = await document.querySelectorAll(".bp3-text-overflow-ellipsis")
+        output_type_elems = await querySelectorAll(document, ".bp3-text-overflow-ellipsis")
         output_type_elem, = [e for e in output_type_elems
                              if await get_text(document, e) == output_type]
-        await output_type_elem.click()
+        await click(output_type_elem)
 
         # defensive check
         await asyncio.sleep(config.sleep_duration)
@@ -159,9 +165,9 @@ async def _download_rr_archive(document: Page,
         assert button_text_ == output_type, (button_text_, output_type)
 
     logger.debug("Downloading output of type {}", output_type)
-    buttons = await document.querySelectorAll('button')
+    buttons = await querySelectorAll(document, 'button')
     export_all_confirm, = [b for b in buttons if await get_text(document, b) == 'export all']
-    await export_all_confirm.click()
+    await click(export_all_confirm)
 
     logger.debug("Wait download of {} to {}", output_type, output_directory)
     if config.debug:
@@ -184,22 +190,23 @@ async def signin(document, config: Config, sleep_duration=1.):
     """Sign-in into Roam"""
     logger.debug("Opening signin page")
     await document.goto('https://roamresearch.com/#/signin')
+    await document.waitForNavigation({"timeout": TIMEOUT})
     await asyncio.sleep(sleep_duration)
 
     logger.debug("Fill email '{}'", config.user)
-    email_elem = await document.querySelector("input[name='email']")
-    await email_elem.click()
+    email_elem = await querySelector(document, "input[name='email']")
+    await click(email_elem)
     await email_elem.type(config.user)
 
     logger.debug("Fill password")
-    passwd_elem = await document.querySelector("input[name='password']")
-    await passwd_elem.click()
+    passwd_elem = await querySelector(document, "input[name='password']")
+    await click(passwd_elem)
     await passwd_elem.type(config.password)
 
     logger.debug("Click on sign-in")
-    buttons = await document.querySelectorAll('button')
+    buttons = await querySelectorAll(document, 'button')
     signin_confirm, = [b for b in buttons if await get_text(document, b) == 'sign in']
-    await signin_confirm.click()
+    await click(signin_confirm)
     await asyncio.sleep(sleep_duration)
 
 
@@ -208,6 +215,30 @@ async def go_to_database(document, database):
     url = f'https://roamresearch.com/#/app/{database}'
     logger.debug(f"Load database from url '{url}'")
     await document.goto(url)
+
+
+async def querySelector(document, selector):
+    """Helper for document.querySelector with correct waiting and logging"""
+    logger.trace(f"waitFor: '{selector}'")
+    await document.waitFor(selector, {"timeout": TIMEOUT})
+
+    logger.trace(f"querySelector: '{selector}'")
+    return await document.querySelector(selector)
+
+
+async def querySelectorAll(document, selector):
+    """Helper for document.querySelectorAll with correct waiting and logging"""
+    logger.trace(f"waitFor: '{selector}'")
+    await document.waitFor(selector, {"timeout": TIMEOUT})
+
+    logger.trace(f"querySelectorAll: '{selector}'")
+    return await document.querySelectorAll(selector)
+
+
+async def click(element):
+    """Helper for element.click with correct waiting and logging"""
+    logger.trace(f"click: '{element}'")
+    await element.click({"timeout": TIMEOUT})
 
 
 def _kill_child_process(timeout=50):
