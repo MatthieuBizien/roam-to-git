@@ -3,11 +3,12 @@ import atexit
 import os
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 import psutil
 import pyppeteer.connection
 from loguru import logger
+from pyppeteer.element_handle import ElementHandle
 from pyppeteer.page import Page
 
 
@@ -24,9 +25,6 @@ def patch_pyppeteer():
     pyppeteer.connection.websockets.client.connect = new_method
 
 
-TIMEOUT = 10 * 60_000  # Time in ms
-
-
 async def get_text(page, b, norm=True):
     """Get the inner text of an element"""
     text = await page.evaluate('(element) => element.textContent', b)
@@ -36,7 +34,8 @@ async def get_text(page, b, norm=True):
 
 
 class Config:
-    def __init__(self, database: Optional[str], debug: bool, sleep_duration: float = 2.):
+    def __init__(self, database: Optional[str], debug: bool, timeout: int,
+                 sleep_duration: float = 2.):
         self.user = os.environ["ROAMRESEARCH_USER"]
         self.password = os.environ["ROAMRESEARCH_PASSWORD"]
         assert self.user
@@ -48,6 +47,9 @@ class Config:
         assert self.database, "Please define the Roam database you want to backup."
         self.debug = debug
         self.sleep_duration = sleep_duration
+        self.timeout = timeout
+
+        self.pypupetter_options = {"timeout": self.timeout}
 
 
 async def download_rr_archive(output_type: str,
@@ -97,21 +99,19 @@ async def _download_rr_archive(document: Page,
         await cdp.send('Page.setDownloadBehavior',
                        {'behavior': 'allow', 'downloadPath': str(output_directory)})
 
-    await signin(document, config, sleep_duration=config.sleep_duration)
+    await signin(document, config)
 
     if config.database:
-        await go_to_database(document, config.database)
+        await go_to_database(document, config.database, config)
 
     logger.debug("Wait for interface to load")
-    dot_button = None
-    # Starting is a little bit slow, so we wait for the button that signal it's ok
     await asyncio.sleep(config.sleep_duration)
-    dot_button = await querySelector(document, ".bp3-icon-more")
+    dot_button = await querySelector(document, ".bp3-icon-more", config)
 
     if dot_button is None:
         # If we have multiple databases, we will be stuck. Let's detect that.
         await asyncio.sleep(config.sleep_duration)
-        strong = await querySelector(document, "strong")
+        strong = await querySelector(document, "strong", config)
         if strong:
             if "database's you are an admin of" == await get_text(document, strong):
                 logger.error(
@@ -129,18 +129,18 @@ async def _download_rr_archive(document: Page,
     # Click on something empty to remove the eventual popup
     # "Sync Quick Capture Notes with Workspace"
     await document.mouse.click(0, 0)
-    await document.waitForNavigation({"timeout": TIMEOUT})
+    await document.waitForNavigation(config.pypupetter_options)
 
-    await click(dot_button)
+    await click(dot_button, config)
 
     logger.debug("Launch download popup")
-    divs_pb3 = await querySelectorAll(document, ".bp3-fill")
+    divs_pb3 = await querySelectorAll(document, ".bp3-fill", config)
     export_all, = [b for b in divs_pb3 if await get_text(document, b) == 'export all']
-    await click(export_all)
+    await click(export_all, config)
     await asyncio.sleep(config.sleep_duration)
 
     async def get_dropdown_button():
-        dropdown_button = await querySelector(document, ".bp3-dialog .bp3-button-text")
+        dropdown_button = await querySelector(document, ".bp3-dialog .bp3-button-text", config)
         assert dropdown_button is not None
         dropdown_button_text = await get_text(document, dropdown_button)
         # Defensive check if the interface change
@@ -152,12 +152,12 @@ async def _download_rr_archive(document: Page,
 
     if button_text != output_type:
         logger.debug("Changing output type to {}", output_type)
-        await click(button)
+        await click(button, config)
         await asyncio.sleep(config.sleep_duration)
-        output_type_elems = await querySelectorAll(document, ".bp3-text-overflow-ellipsis")
+        output_type_elems = await querySelectorAll(document, ".bp3-text-overflow-ellipsis", config)
         output_type_elem, = [e for e in output_type_elems
                              if await get_text(document, e) == output_type]
-        await click(output_type_elem)
+        await click(output_type_elem, config)
 
         # defensive check
         await asyncio.sleep(config.sleep_duration)
@@ -165,9 +165,9 @@ async def _download_rr_archive(document: Page,
         assert button_text_ == output_type, (button_text_, output_type)
 
     logger.debug("Downloading output of type {}", output_type)
-    buttons = await querySelectorAll(document, 'button')
+    buttons = await querySelectorAll(document, 'button', config)
     export_all_confirm, = [b for b in buttons if await get_text(document, b) == 'export all']
-    await click(export_all_confirm)
+    await click(export_all_confirm, config)
 
     logger.debug("Wait download of {} to {}", output_type, output_directory)
     if config.debug:
@@ -186,59 +186,75 @@ async def _download_rr_archive(document: Page,
     raise FileNotFoundError("Impossible to download {} in {}", output_type, output_directory)
 
 
-async def signin(document, config: Config, sleep_duration=1.):
+async def signin(document: Page, config: Config):
     """Sign-in into Roam"""
     logger.debug("Opening signin page")
-    await document.goto('https://roamresearch.com/#/signin')
-    await document.waitForNavigation({"timeout": TIMEOUT})
-    await asyncio.sleep(sleep_duration)
+    await goto(document, 'https://roamresearch.com/#/signin', config)
 
     logger.debug("Fill email '{}'", config.user)
-    email_elem = await querySelector(document, "input[name='email']")
-    await click(email_elem)
+    email_elem = await querySelector(document, "input[name='email']", config)
+    await click(email_elem, config)
     await email_elem.type(config.user)
 
     logger.debug("Fill password")
-    passwd_elem = await querySelector(document, "input[name='password']")
-    await click(passwd_elem)
+    passwd_elem = await querySelector(document, "input[name='password']", config)
+    await click(passwd_elem, config)
     await passwd_elem.type(config.password)
 
     logger.debug("Click on sign-in")
-    buttons = await querySelectorAll(document, 'button')
+    buttons = await querySelectorAll(document, 'button', config)
     signin_confirm, = [b for b in buttons if await get_text(document, b) == 'sign in']
-    await click(signin_confirm)
-    await asyncio.sleep(sleep_duration)
+    await click(signin_confirm, config)
 
 
-async def go_to_database(document, database):
+async def go_to_database(document: Page, database: str, config: Config):
     """Go to the database page"""
+    await asyncio.sleep(config.sleep_duration)
     url = f'https://roamresearch.com/#/app/{database}'
     logger.debug(f"Load database from url '{url}'")
-    await document.goto(url)
+    await goto(document, url, config)
+
+    logger.debug(f"sleep: {config.sleep_duration}'")
+    await asyncio.sleep(config.sleep_duration)
 
 
-async def querySelector(document, selector):
+async def querySelector(document: Page, selector: str, config: Config) -> ElementHandle:
     """Helper for document.querySelector with correct waiting and logging"""
-    logger.trace(f"waitFor: '{selector}'")
-    await document.waitFor(selector, {"timeout": TIMEOUT})
+    logger.trace(f"waitFor: '{selector}' options={config.pypupetter_options}")
+    await document.waitFor(selector, options=config.pypupetter_options)
 
     logger.trace(f"querySelector: '{selector}'")
     return await document.querySelector(selector)
 
 
-async def querySelectorAll(document, selector):
+async def querySelectorAll(document: Page, selector: str, config: Config) -> List[ElementHandle]:
     """Helper for document.querySelectorAll with correct waiting and logging"""
-    logger.trace(f"waitFor: '{selector}'")
-    await document.waitFor(selector, {"timeout": TIMEOUT})
+    logger.trace(f"waitFor: '{selector}' options={config.pypupetter_options}")
+    await document.waitFor(selector, options=config.pypupetter_options)
 
     logger.trace(f"querySelectorAll: '{selector}'")
     return await document.querySelectorAll(selector)
 
 
-async def click(element):
+async def click(element: ElementHandle, config: Config) -> None:
     """Helper for element.click with correct waiting and logging"""
-    logger.trace(f"click: '{element}'")
-    await element.click({"timeout": TIMEOUT})
+    logger.trace(f"click: '{element}' options={config.pypupetter_options}")
+    await element.click(options=config.pypupetter_options)
+
+    logger.trace(f"sleep: {config.sleep_duration} seconds")
+    await asyncio.sleep(config.sleep_duration)
+
+
+async def goto(document: Page, url: str, config: Config):
+    """Helper for document.goto with correct waiting and logging"""
+    logger.trace(f"goto: {url}")
+    await document.goto(url)
+
+    logger.trace(f"waitForNavigation: {config.pypupetter_options}")
+    await document.waitForNavigation(config.pypupetter_options)
+
+    logger.trace(f"sleep: {config.sleep_duration} seconds")
+    await asyncio.sleep(config.sleep_duration)
 
 
 def _kill_child_process(timeout=50):

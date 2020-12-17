@@ -10,10 +10,10 @@ import git
 from dotenv import load_dotenv
 from loguru import logger
 
-from roam_to_git.formatter import read_markdown_directory, format_markdown
-from roam_to_git.fs import reset_git_directory, unzip_markdown_archive, \
-    unzip_and_save_json_archive, commit_git_directory, push_git_repository, save_markdowns
-from roam_to_git.scrapping import patch_pyppeteer, scrap, Config
+from roam_to_git.formatter import format_markdown, read_markdown_directory
+from roam_to_git.fs import commit_git_directory, push_git_repository, reset_git_directory, \
+    save_markdowns, unzip_and_save_json_archive, unzip_markdown_archive
+from roam_to_git.scrapping import Config, patch_pyppeteer, scrap
 
 
 @logger.catch(reraise=True)
@@ -38,6 +38,11 @@ def main():
                         help="Duration to wait for the interface. We wait 100x that duration for"
                              "Roam to load. Increase it if Roam servers are slow, but be careful"
                              "with the free tier of Github Actions.")
+    parser.add_argument("--timeout", type=float, default=600,
+                        help="Timeout for the interface to react, in seconds. "
+                             "Increase it if Roam servers are slow, "
+                             "but be careful with the free tier of Github Actions."
+                        )
     args = parser.parse_args()
 
     patch_pyppeteer()
@@ -55,7 +60,11 @@ def main():
         logger.error("Please define ROAMRESEARCH_USER and ROAMRESEARCH_PASSWORD, "
                      "in the .env file of your notes repository, or in environment variables")
         sys.exit(1)
-    config = Config(args.database, debug=args.debug, sleep_duration=float(args.sleep_duration))
+    config = Config(args.database,
+                    debug=args.debug,
+                    sleep_duration=float(args.sleep_duration),
+                    timeout=args.timeout * 1000,  # seconds to milli-seconds
+                    )
 
     if args.skip_git:
         repo = None
