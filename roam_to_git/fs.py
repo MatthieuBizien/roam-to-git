@@ -1,10 +1,12 @@
 import datetime
 import json
+import platform
 import zipfile
 from pathlib import Path
-from typing import List, Dict
+from typing import Dict, List
 
 import git
+import pathvalidate
 from loguru import logger
 
 
@@ -50,7 +52,7 @@ def save_markdowns(directory: Path, contents: Dict[str, str]):
     logger.debug("Saving markdown to {}", directory)
     # Format and write the markdown files
     for file_name, content in contents.items():
-        dest = (directory / file_name)
+        dest = get_clean_path(directory, file_name)
         dest.parent.mkdir(parents=True, exist_ok=True)  # Needed if a new directory is used
         # We have to specify encoding because crontab on Mac don't use UTF-8
         # https://stackoverflow.com/questions/11735363/python3-unicodeencodeerror-crontab
@@ -64,10 +66,10 @@ def unzip_and_save_json_archive(zip_dir_path: Path, directory: Path):
     zip_path = get_zip_path(zip_dir_path)
     with zipfile.ZipFile(zip_path) as zip_file:
         files = list(zip_file.namelist())
-        for file in files:
-            assert file.endswith(".json")
-            content = json.loads(zip_file.read(file).decode())
-            with open(directory / file, "w") as f:
+        for file_name in files:
+            assert file_name.endswith(".json")
+            content = json.loads(zip_file.read(file_name).decode())
+            with open(directory / file_name, "w") as f:
                 json.dump(content, f, sort_keys=True, indent=2, ensure_ascii=True)
 
 
@@ -85,3 +87,11 @@ def push_git_repository(repo: git.Repo):
     logger.debug("Pushing to origin")
     origin = repo.remote(name='origin')
     origin.push()
+
+
+def get_clean_path(directory: Path, file_name: str) -> Path:
+    """Remove any special characters on the file name"""
+    out = directory
+    for name in file_name.split("/"):
+        out = out / pathvalidate.sanitize_filename(name, platform=platform.system())
+    return out
