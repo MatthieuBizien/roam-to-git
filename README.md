@@ -23,6 +23,8 @@ This script automatically
 
 # Use it with Github Actions (recommended)
 
+**Note**: [Erik Newhard's guide](https://eriknewhard.com/blog/backup-roam-in-github) shows an easy way of setting up Github Actions without using the CLI.
+
 ##  Create a (private) Github repository for all your notes
 
 With [gh](https://github.com/cli/cli): `gh repo create notes` (yes, it's private)
