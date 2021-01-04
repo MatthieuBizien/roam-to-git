@@ -3,7 +3,7 @@ import atexit
 import os
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 import psutil
 import pyppeteer.connection
@@ -33,7 +33,11 @@ async def get_text(page, b, norm=True):
 
 
 class Config:
-    def __init__(self, database: Optional[str], debug: bool, sleep_duration: float = 2.):
+    def __init__(self,
+                 database: Optional[str],
+                 debug: bool,
+                 sleep_duration: float = 2.,
+                 browser_args: Optional[List[str]] = None):
         self.user = os.environ["ROAMRESEARCH_USER"]
         self.password = os.environ["ROAMRESEARCH_PASSWORD"]
         assert self.user
@@ -45,6 +49,7 @@ class Config:
         assert self.database, "Please define the Roam database you want to backup."
         self.debug = debug
         self.sleep_duration = sleep_duration
+        self.browser_args = (browser_args or [])
 
 
 async def download_rr_archive(output_type: str,
@@ -53,10 +58,14 @@ async def download_rr_archive(output_type: str,
                               slow_motion=10,
                               ):
     logger.debug("Creating browser")
-    browser = await pyppeteer.launch(devtools=config.debug,
-                                     slowMo=slow_motion,
-                                     autoClose=False,
-                                     )
+    browser = await pyppeteer.launch(
+        devtools=config.debug,
+        slowMo=slow_motion,
+        autoClose=False,
+        # Expose stdout from launched browser
+        dumpio=True,
+        args=config.browser_args,
+    )
     if config.debug:
         # We want the browser to stay open for debugging the interface
         pages = await browser.pages()
