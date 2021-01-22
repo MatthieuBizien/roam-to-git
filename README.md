@@ -192,9 +192,15 @@ backup:
 
     - pip3 install git+https://github.com/MatthieuBizien/roam-to-git.git
 
-    # TODO(agentydragon): Consider creating Docker image with all deps already
+    # TODO(agentydragon): Create and publish Docker image with all deps already
     # installed.
   script:
+    # Need to clone the repo again over SSH, since by default GitLab clones
+    # the repo for CI over HTTPS, for which we cannot authenticate pushes via
+    # pubkey.
+    - git clone git@gitlab.com:YOUR_USER/YOUR_PROJECT
+    - cd YOUR_PROJECT
+
     # --no-sandbox needed because Chrome refuses to run as root without it.
     - roam-to-git --browser-arg=--no-sandbox .
 ```
