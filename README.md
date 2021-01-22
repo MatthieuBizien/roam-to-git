@@ -198,7 +198,7 @@ backup:
     # Need to clone the repo again over SSH, since by default GitLab clones
     # the repo for CI over HTTPS, for which we cannot authenticate pushes via
     # pubkey.
-    - git clone git@gitlab.com:YOUR_USER/YOUR_PROJECT
+    - git clone --depth=1 git@gitlab.com:YOUR_USER/YOUR_PROJECT
     - cd YOUR_PROJECT
 
     # --no-sandbox needed because Chrome refuses to run as root without it.
