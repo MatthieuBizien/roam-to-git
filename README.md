@@ -35,7 +35,19 @@ Or [manually](https://help.github.com/en/github/getting-started-with-github/crea
 
 - Go to github.com/your/repository/settings/secrets 
 
-###
+
+##### Regarding Google Account Authorization
+
+Due to the limitations of OAuth and complexities with tokens, we are unable to snapshot accounts that are set up with the *Login with Google* option as of now.
+
+To set up backup in this case, you will need to *create*(not exactly) a native account from your old Google Account, which is as simple as using the reset password link found in Roam. 
+
+![image](https://user-images.githubusercontent.com/46789005/99179188-24482f00-2741-11eb-9c24-df7bb8707709.png)
+
+Once you've reset your password, use the following steps to finish setting up your backup!
+
+
+### Configuring Github Secrets
 
 Add 3 (separate) secrets where the names are 
 

@@ -10,6 +10,8 @@ import pyppeteer.connection
 from loguru import logger
 from pyppeteer.page import Page
 
+ROAM_FORMATS = ("json", "markdown", "edn")
+
 
 def patch_pyppeteer():
     """Fix https://github.com/miyakogi/pyppeteer/issues/178"""
@@ -94,7 +96,7 @@ async def _download_rr_archive(document: Page,
                                ):
     """Download an archive in RoamResearch.
 
-    :param output_type: Download JSON or Markdown
+    :param output_type: Download JSON or Markdown or EDN
     :param output_directory: Directory where to stock the outputs
     """
     if not config.debug:
@@ -147,7 +149,7 @@ async def _download_rr_archive(document: Page,
         assert dropdown_button is not None
         dropdown_button_text = await get_text(document, dropdown_button)
         # Defensive check if the interface change
-        assert dropdown_button_text in ["markdown", "json"], dropdown_button_text
+        assert dropdown_button_text in ROAM_FORMATS, dropdown_button_text
         return dropdown_button, dropdown_button_text
 
     logger.debug("Checking download type")
@@ -193,7 +195,8 @@ async def signin(document, config: Config, sleep_duration=1.):
     """Sign-in into Roam"""
     logger.debug("Opening signin page")
     await document.goto('https://roamresearch.com/#/signin')
-    await asyncio.sleep(sleep_duration)
+    # increased to 5 seconds to handle sporadic second login screen refresh
+    await asyncio.sleep(6.)
 
     logger.debug("Fill email '{}'", config.user)
     email_elem = await document.querySelector("input[name='email']")
@@ -240,14 +243,15 @@ def _kill_child_process(timeout=50):
                 pass
 
 
-def scrap(markdown_zip_path: Path, json_zip_path: Path, config: Config):
-    # Just for easier run from the CLI
-    markdown_zip_path = Path(markdown_zip_path)
-    json_zip_path = Path(json_zip_path)
+def scrap(zip_path: Path, formats: List[str], config: Config):
+    tasks = []
+    for f in formats:
+        format_zip_path = zip_path / f
+        format_zip_path.mkdir(exist_ok=True)
+        tasks.append(
+            download_rr_archive(f, format_zip_path, config=config)
+        )
 
-    tasks = [download_rr_archive("markdown", Path(markdown_zip_path), config=config),
-             download_rr_archive("json", Path(json_zip_path), config=config),
-             ]
     # Register to always kill child process when the script close, to not have zombie process.
     # Because of https://github.com/miyakogi/pyppeteer/issues/274 without this patch it does happen
     # a lot.
