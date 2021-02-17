@@ -50,6 +50,9 @@ def main():
                         help="Duration to wait for the interface. We wait 100x that duration for"
                              "Roam to load. Increase it if Roam servers are slow, but be careful"
                              "with the free tier of Github Actions.")
+    parser.add_argument("--browser-arg",
+                        help="Flags to pass through to launched browser.",
+                        action='append')
     parser.add_argument("--formats", "-f", action=ExtendAction, nargs="+", type=str,
                         help="Which formats to save. Options include json, markdown, formatted, "
                              "and edn. Note that if only formatted is specified, the markdown "
@@ -73,7 +76,10 @@ def main():
         logger.error("Please define ROAMRESEARCH_USER and ROAMRESEARCH_PASSWORD, "
                      "in the .env file of your notes repository, or in environment variables")
         sys.exit(1)
-    config = Config(args.database, debug=args.debug, sleep_duration=float(args.sleep_duration))
+    config = Config(args.database,
+                    debug=args.debug,
+                    sleep_duration=float(args.sleep_duration),
+                    browser_args=args.browser_arg)
 
     if args.skip_git:
         repo = None
