@@ -102,6 +102,8 @@ def get_clean_path(directory: Path, file_name: str) -> Path:
     """Remove any special characters on the file name"""
     out = directory
     for name in file_name.split("/"):
+        if name == "..":
+            continue
         out = out / pathvalidate.sanitize_filename(name, platform=platform.system())
     return out
 
