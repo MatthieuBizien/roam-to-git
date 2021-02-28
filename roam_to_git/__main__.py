@@ -2,7 +2,6 @@
 import argparse
 import os
 import sys
-import tempfile
 import time
 from pathlib import Path
 
@@ -12,8 +11,8 @@ from loguru import logger
 
 from roam_to_git.formatter import read_markdown_directory, format_markdown
 from roam_to_git.fs import reset_git_directory, save_files, unzip_and_save_archive, \
-    commit_git_directory, push_git_repository
-from roam_to_git.scrapping import patch_pyppeteer, scrap, Config, ROAM_FORMATS
+    commit_git_directory, push_git_repository, create_temporary_directory
+from roam_to_git.scrapping import scrap, Config, ROAM_FORMATS
 
 CUSTOM_FORMATS = ("formatted",)
 ALL_FORMATS = ROAM_FORMATS + CUSTOM_FORMATS
@@ -32,12 +31,15 @@ class ExtendAction(argparse.Action):
 
 @logger.catch(reraise=True)
 def main():
+    logger.trace("Entrypoint of roam-to-git")
+
     parser = argparse.ArgumentParser()
     parser.add_argument("directory", default=None, nargs="?",
                         help="Directory of your notes are stored. Default to notes/")
     parser.add_argument("--debug", action="store_true",
-                        help="Help debug by opening the browser in the foreground. Note that the "
-                             "git repository will not be updated with that option.")
+                        help="Activate various debug-oriented modes")
+    parser.add_argument("--gui", action="store_true",
+                        help="Help debug by opening the browser in the foreground.")
     parser.add_argument("--database", default=None,
                         help="If you have multiple Roam databases, select the one you want to save."
                              "Can also be configured with env variable ROAMRESEARCH_DATABASE.")
@@ -50,6 +52,8 @@ def main():
                         help="Duration to wait for the interface. We wait 100x that duration for"
                              "Roam to load. Increase it if Roam servers are slow, but be careful"
                              "with the free tier of Github Actions.")
+    parser.add_argument("--browser", default="firefox",
+                        help="Browser to use for scrapping in Selenium.")
     parser.add_argument("--browser-arg",
                         help="Flags to pass through to launched browser.",
                         action='append')
@@ -61,7 +65,6 @@ def main():
                              "output will be pretty printed allowing for cleaner git diffs.")
     args = parser.parse_args()
 
-    patch_pyppeteer()
     if args.directory is None:
         git_path = Path("notes").absolute()
     else:
@@ -76,9 +79,11 @@ def main():
         logger.error("Please define ROAMRESEARCH_USER and ROAMRESEARCH_PASSWORD, "
                      "in the .env file of your notes repository, or in environment variables")
         sys.exit(1)
-    config = Config(args.database,
+    config = Config(database=args.database,
                     debug=args.debug,
+                    gui=args.gui,
                     sleep_duration=float(args.sleep_duration),
+                    browser=args.browser,
                     browser_args=args.browser_arg)
 
     if args.skip_git:
@@ -101,7 +106,7 @@ def main():
     # check if we need to fetch a format from roam
     roam_formats = [f for f in args.formats if f in ROAM_FORMATS]
     if len(roam_formats) > 0:
-        with tempfile.TemporaryDirectory() as root_zip_path:
+        with create_temporary_directory(autodelete=not config.debug) as root_zip_path:
             root_zip_path = Path(root_zip_path)
             scrap(root_zip_path, roam_formats, config)
             if config.debug:

@@ -1,6 +1,8 @@
+import contextlib
 import datetime
 import json
 import platform
+import tempfile
 import zipfile
 from pathlib import Path
 from typing import Dict, List
@@ -102,3 +104,16 @@ def get_clean_path(directory: Path, file_name: str) -> Path:
     for name in file_name.split("/"):
         out = out / pathvalidate.sanitize_filename(name, platform=platform.system())
     return out
+
+
+@contextlib.contextmanager
+def create_temporary_directory(autodelete=True):
+    if autodelete:
+        with tempfile.TemporaryDirectory() as directory:
+            yield directory
+    else:
+        now = datetime.datetime.now().isoformat().replace(":", "-")
+        directory = Path("/tmp") / "roam-to-git" / now
+        directory.mkdir(parents=True)
+        yield directory
+        # No clean-up
