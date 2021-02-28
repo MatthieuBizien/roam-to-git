@@ -2,6 +2,6 @@
 gitpython>=3.1.*
 loguru==0.4.*
 pathvalidate==2.*
-pyppeteer>=0.0.25
 python-dotenv>=0.10.*
 psutil>=5.6.0
+selenium==3.*

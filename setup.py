@@ -5,7 +5,7 @@ from pkg_resources import parse_requirements
 setup(
     name='roam_to_git',
     packages=['roam_to_git'],
-    version='0.1',
+    version='0.2',
     license='MIT',
     description='Automatic RoamResearch backup to Git',
     author='Matthieu Bizien',  # Type in your name
