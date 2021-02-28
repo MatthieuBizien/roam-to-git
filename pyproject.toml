@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "roam-to-git"
+version = "0.2.1"
+description = "Automatic RoamResearch backup to Git"
+authors = ["Matthieu Bizien <matthieu@yokai.ai>"]
+license = "Matthieu Bizien <oao2005@gmail.com>"
+homepage = "https://github.com/MatthieuBizien/roam-to-git"
+keywords = ["RoamResearch", "Roam"]
+
+[tool.poetry.dependencies]
+python = "^3.6"
+GitPython = "^3.1.14"
+loguru = "^0.5.3"
+pathvalidate = "^2.3.2"
+python-dotenv = "^0.15.0"
+psutil = "^5.8.0"
+selenium = "^3.141.0"
+mypy = { version = "^0.812", optional = true}
+
+[tool.poetry.extras]
+test = ["mypy"]  # Installable with pip
+
+[tool.poetry.scripts]
+roam-to-git = "roam_to_git.__main__:main"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
