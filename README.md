@@ -6,19 +6,30 @@
 This script helps you backup your [RoamResearch](https://roamresearch.com/) graphs!
 
 This script automatically
-- Downloads a markdown archive of your RoamResearch workspace
-- Downloads a json archive of your RoamResearch workspace
+- Downloads a **markdown archive** of your RoamResearch workspace
+- Downloads a **json archive** of your RoamResearch workspace
+- Download the full **EDN** of your RoamResearch workspace
 - Unzips them to your git directory
-- Commits and pushes the difference to Github
+- Format your markdown, including with **backlinks**
+- **Commits and push** the difference to Github
+
+# What's new
+
+**V.02:** 
+- Use Selenium library, and roam-to-git seems to be much faster and stable 🔥
+- Download the EDN archive
 
 # Demo
 [See it in action!](https://github.com/MatthieuBizien/roam-to-git-demo). This repo is updated using roam-to-git.
 
+🚀🚀 **NEW** 🚀🚀 : The [Unofficial backup](https://github.com/MatthieuBizien/RoamResearch-offical-help/) 
+of the official [RoamResearch Help Database](https://roamresearch.com/#/app/help)
+
 # Why to use it
 
-- You have a backup if RoamResearch loses some of your data.
-- You have a history of your notes.
-- You can browse your Github repository easily with a mobile device
+- You have a **backup** if RoamResearch loses some of your data.
+- You have a **history** of your notes.
+- You can **browse** your Github repository easily with a mobile device
 
 
 # Use it with Github Actions (recommended)
