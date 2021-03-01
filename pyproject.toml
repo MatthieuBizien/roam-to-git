@@ -2,6 +2,7 @@
 name = "roam-to-git"
 version = "0.2.1"
 description = "Automatic RoamResearch backup to Git"
+readme = "README.md"
 authors = ["Matthieu Bizien <matthieu@yokai.ai>"]
 license = "Matthieu Bizien <oao2005@gmail.com>"
 homepage = "https://github.com/MatthieuBizien/roam-to-git"
