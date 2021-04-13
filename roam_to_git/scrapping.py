@@ -10,7 +10,7 @@ import psutil
 from loguru import logger
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 
 ROAM_FORMATS = ("json", "markdown", "edn")
 
@@ -247,21 +247,38 @@ def _download_rr_archive(browser: Browser,
     raise FileNotFoundError("Impossible to download {} in {}", output_type, output_directory)
 
 
-def signin(browser, config: Config, sleep_duration=1.):
+def signin(browser: Browser, config: Config, sleep_duration=1.):
     """Sign-in into Roam"""
     logger.debug("Opening signin page")
     browser.get('https://roamresearch.com/#/signin')
-    # increased to 5 seconds to handle sporadic second login screen refresh
-    time.sleep(6.)
 
-    logger.debug("Fill email '{}'", config.user)
-    email_elem = browser.find_element_by_css_selector("input[name='email']")
-    email_elem.send_keys(config.user)
+    logger.debug("Waiting for  email and passwork fields", config.user)
+    while True:
+        try:
+            email_elem = browser.find_element_by_css_selector("input[name='email']", check=False)
+            passwd_elem = browser.find_element_by_css_selector("input[name='password']")
 
-    logger.debug("Fill password")
-    passwd_elem = browser.find_element_by_css_selector("input[name='password']")
-    passwd_elem.send_keys(config.password)
-    passwd_elem.send_keys(Keys.RETURN)
+            logger.debug("Fill email '{}'", config.user)
+            email_elem.send_keys(config.user)
+
+            logger.debug("Fill password")
+            passwd_elem.send_keys(config.password)
+
+            logger.debug("Defensive check: verify that the user input field is correct")
+            time.sleep(sleep_duration)
+            email_elem = browser.find_element_by_css_selector("input[name='email']", check=False)
+            if email_elem.html_element.get_attribute('value') != config.user:
+                continue
+
+            logger.debug("Activating sign-in")
+            passwd_elem.send_keys(Keys.RETURN)
+            break
+        except NoSuchElementException:
+            logger.trace("NoSuchElementException: Retry getting the email field")
+            time.sleep(1)
+        except StaleElementReferenceException:
+            logger.trace("StaleElementReferenceException: Retry getting the email field")
+            time.sleep(1)
 
 
 def go_to_database(browser, database):
