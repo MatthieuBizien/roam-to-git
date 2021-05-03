@@ -1,10 +1,15 @@
+import contextlib
 import datetime
 import json
+import platform
+import tempfile
 import zipfile
 from pathlib import Path
-from typing import List, Dict
+from typing import Dict, List
+from subprocess import Popen, PIPE, STDOUT
 
 import git
+import pathvalidate
 from loguru import logger
 
 
@@ -25,7 +30,7 @@ def reset_git_directory(git_path: Path, skip=(".git",)):
         if any(skip_item in file.parts for skip_item in skip):
             continue
         to_remove.append(file)
-    # Now we remove starting from the end to remove childs before parents
+    # Now we remove starting from the end to remove children before parents
     to_remove = sorted(set(to_remove))[::-1]
     for file in to_remove:
         if file.is_file():
@@ -37,7 +42,8 @@ def reset_git_directory(git_path: Path, skip=(".git",)):
                 file.rmdir()
 
 
-def unzip_markdown_archive(zip_dir_path: Path):
+def unzip_archive(zip_dir_path: Path):
+    logger.debug("Unzipping {}", zip_dir_path)
     zip_path = get_zip_path(zip_dir_path)
     with zipfile.ZipFile(zip_path) as zip_file:
         contents = {file.filename: zip_file.read(file.filename).decode()
@@ -46,29 +52,34 @@ def unzip_markdown_archive(zip_dir_path: Path):
     return contents
 
 
-def save_markdowns(directory: Path, contents: Dict[str, str]):
-    logger.debug("Saving markdown to {}", directory)
-    # Format and write the markdown files
+def save_files(save_format: str, directory: Path, contents: Dict[str, str]):
+    logger.debug("Saving {} to {}", save_format, directory)
     for file_name, content in contents.items():
-        dest = (directory / file_name)
+        dest = get_clean_path(directory, file_name)
         dest.parent.mkdir(parents=True, exist_ok=True)  # Needed if a new directory is used
         # We have to specify encoding because crontab on Mac don't use UTF-8
         # https://stackoverflow.com/questions/11735363/python3-unicodeencodeerror-crontab
         with dest.open("w", encoding="utf-8") as f:
-            f.write(content)
+            if save_format == 'json':
+                json.dump(json.loads(content), f, sort_keys=True, indent=2, ensure_ascii=True)
+            else:  # markdown, formatted, edn
+                if save_format == 'edn':
+                    try:
+                        jet = Popen(
+                            ["jet", "--edn-reader-opts", "{:default tagged-literal}", "--pretty"],
+                            stdout=PIPE, stdin=PIPE, stderr=STDOUT)
+                        jet_stdout, _ = jet.communicate(input=str.encode(content))
+                        content = jet_stdout.decode()
+                    except IOError:
+                        logger.debug("Jet not installed, skipping EDN pretty printing")
+
+                f.write(content)
 
 
-def unzip_and_save_json_archive(zip_dir_path: Path, directory: Path):
-    logger.debug("Saving json to {}", directory)
-    directory.mkdir(exist_ok=True)
-    zip_path = get_zip_path(zip_dir_path)
-    with zipfile.ZipFile(zip_path) as zip_file:
-        files = list(zip_file.namelist())
-        for file in files:
-            assert file.endswith(".json")
-            content = json.loads(zip_file.read(file).decode())
-            with open(directory / file, "w") as f:
-                json.dump(content, f, sort_keys=True, indent=2, ensure_ascii=True)
+def unzip_and_save_archive(save_format: str, zip_dir_path: Path, directory: Path):
+    logger.debug("Saving {} to {}", save_format, directory)
+    contents = unzip_archive(zip_dir_path)
+    save_files(save_format, directory, contents)
 
 
 def commit_git_directory(repo: git.Repo):
@@ -85,3 +96,26 @@ def push_git_repository(repo: git.Repo):
     logger.debug("Pushing to origin")
     origin = repo.remote(name='origin')
     origin.push()
+
+
+def get_clean_path(directory: Path, file_name: str) -> Path:
+    """Remove any special characters on the file name"""
+    out = directory
+    for name in file_name.split("/"):
+        if name == "..":
+            continue
+        out = out / pathvalidate.sanitize_filename(name, platform=platform.system())
+    return out
+
+
+@contextlib.contextmanager
+def create_temporary_directory(autodelete=True):
+    if autodelete:
+        with tempfile.TemporaryDirectory() as directory:
+            yield directory
+    else:
+        now = datetime.datetime.now().isoformat().replace(":", "-")
+        directory = Path("/tmp") / "roam-to-git" / now
+        directory.mkdir(parents=True)
+        yield directory
+        # No clean-up

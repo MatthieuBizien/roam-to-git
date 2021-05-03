@@ -1,26 +1,37 @@
 name: "roam-to-git tests.py"
 
-on:
-  push:
-    branches:
-      - master
-      - dev 
+on: [push, pull_request]
+
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ macos-latest, ubuntu-latest, windows-latest]
+        python: [ 3.6, 3.7, 3.8, 3.9 ]
+
+    env:
+      OS: ${{ matrix.os }}
+      PYTHON: ${{ matrix.python }}
+
+    runs-on: ${{ matrix.os }}
     name: Test
     timeout-minutes: 15
-    steps:
-      -   uses: actions/checkout@v2
-      -   name: Set up Python 3.8
-          uses: actions/setup-python@v1
-          with:
-            python-version: 3.8
 
-      -   name: Setup dependencies
-          run: |
-            pip install -r requirements.txt
-            pip install mypy
-      -   name: Run backup
-          run: ./tests.py
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python }}
+
+    - name: Setup dependencies
+      run: |
+        python --version
+        python -m pip install -r requirements.txt
+        python -m pip install mypy
+
+    - name: Run backup
+      run: ./tests.py
