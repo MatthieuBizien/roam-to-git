@@ -11,7 +11,7 @@ This script automatically
 - Download the full **EDN** of your RoamResearch workspace
 - Unzips them to your git directory
 - Format your markdown, including with **backlinks**
-- **Commits and push** the difference to Github
+- **Commits and push** the difference to GitHub
 
 # What's new
 
@@ -29,20 +29,20 @@ of the official [RoamResearch Help Database](https://roamresearch.com/#/app/help
 
 - You have a **backup** if RoamResearch loses some of your data.
 - You have a **history** of your notes.
-- You can **browse** your Github repository easily with a mobile device
+- You can **browse** your GitHub repository easily with a mobile device
 
 
-# Use it with Github Actions (recommended)
+# Use it with GitHub Actions (recommended)
 
-**Note**: [Erik Newhard's guide](https://eriknewhard.com/blog/backup-roam-in-github) shows an easy way of setting up Github Actions without using the CLI.
+**Note**: [Erik Newhard's guide](https://eriknewhard.com/blog/backup-roam-in-github) shows an easy way of setting up GitHub Actions without using the CLI.
 
-##  Create a (private) Github repository for all your notes
+##  Create a (private) GitHub repository for all your notes
 
 With [gh](https://github.com/cli/cli): `gh repo create notes` (yes, it's private)
 
 Or [manually](https://help.github.com/en/github/getting-started-with-github/create-a-repo)
 
-## Configure Github secrets 
+## Configure GitHub secrets 
 
 - Go to github.com/your/repository/settings/secrets 
 
@@ -58,7 +58,7 @@ To set up backup in this case, you will need to *create*(not exactly) a native a
 Once you've reset your password, use the following steps to finish setting up your backup!
 
 
-### Configuring Github Secrets
+### Configuring GitHub Secrets
 
 Add 3 (separate) secrets where the names are 
 
@@ -87,7 +87,7 @@ git commit -m "Add github/workflows/main.yml"
 git push --set-upstream origin master
 ```
 
-## Check that the Github Action works
+## Check that the GitHub Action works
 
 - Go to github.com/your/repository/actions
 - Your CI job should start in a few seconds
@@ -204,7 +204,7 @@ backup:
     # (Taken from: https://github.com/buildkite/docker-puppeteer/blob/master/Dockerfile)
     # We install Chrome to get all the OS level dependencies, but Chrome itself
     # is not actually used as it's packaged in the pyppeteer library.
-    # Alternatively, we could could include the entire dep list ourselves
+    # Alternatively, we could include the entire dep list ourselves
     # (https://github.com/puppeteer/puppeteer/blob/master/docs/troubleshooting.md#chrome-headless-doesnt-launch-on-unix)
     # but that seems too easy to get out of date.
     - apt-get install -y wget gnupg ca-certificates
@@ -260,7 +260,7 @@ With [pipx](https://github.com/pipxproject/pipx)
 
 `pipx install git+https://github.com/MatthieuBizien/roam-to-git.git`
 
-## Create a (private) Github repository for all your notes
+## Create a (private) GitHub repository for all your notes
 
 With [gh](https://github.com/cli/cli): `gh repo create notes` (yes, it's private)
 
@@ -277,18 +277,18 @@ Then run `git push --set-upstream origin master`
 ## Manual backup
 
 - Run the script: `roam-to-git notes/`
-- Check your Github repository, it should be filled with your notes :)
+- Check your GitHub repository, it should be filled with your notes :)
 
 ## Automatic backup
 
-One-liner to run it with a [cron](https://en.wikipedia.org/wiki/Cron) every hours: 
+One-liner to run it with a [cron](https://en.wikipedia.org/wiki/Cron) every hour: 
 `echo "0 *  *  *  *  '$(which roam-to-git)' '$(pwd)/notes'" | crontab -`
 
 NB: there are [issues](https://github.com/MatthieuBizien/roam-to-git/issues/43) on Mac with a crontab.
 
 # Debug
 
-Making `roam-to-git` foolproof is hard, as it depends on Roam, on Github Action or the local environment, 
+Making `roam-to-git` foolproof is hard, as it depends on Roam, on GitHub Action or the local environment, 
 on software not very stable (`pyppeteer` we still love you 😉 )
 and on the correct user configuration.
 
@@ -297,7 +297,7 @@ For debugging, please try the following:
 - Check that the environment variables `ROAMRESEARCH_USER`, `ROAMRESEARCH_PASSWORD`, `ROAMRESEARCH_DATABASE` are correctly setup
 - Login into Roam using the username and the password. 
 You may want to ask a new password if you have enabled Google Login, as it solved some user problems.
-- Run `roam-to-git --debug` to check the authentification and download work
+- Run `roam-to-git --debug` to check the authentication and download work
 - Look at the traceback
 - Look for similar issues
 - If nothing else work, create a new issue with as many details as possible. 
@@ -310,12 +310,12 @@ I will try my best to understand and help you, no SLA promised 😇
 - [x] Download automatically from RoamResearch
 - [x] Create Cron
 - [x] Write detailed README
-- [x] Publish the repository on Github
-- [ ] Download images (they currently visible in Github, but not in the archive so not saved in the repository 😕)
+- [x] Publish the repository on GitHub
+- [ ] Download images (they currently visible in GitHub, but not in the archive so not saved in the repository 😕)
 
 ## Format the backup to have a good UI
 
-### Link formatting to be compatible with Github markdown
+### Link formatting to be compatible with GitHub markdown
 - [x] Format `[[links]]`
 - [x] Format `#links`
 - [x] Format `attribute::`
@@ -328,11 +328,11 @@ I will try my best to understand and help you, no SLA promised 😇
 - [x] Manage `/` in file names
 
 ### Other formatting
-- [x] Format `{{TODO}}` to be compatible with Github markdown
+- [x] Format `{{TODO}}` to be compatible with GitHub markdown
 - [ ] Format `{{query}}``
 
 ## Make it for others
-- [x] Push it to Github
+- [x] Push it to GitHub
 - [x] Add example repository
 - [x] Make the backup directory configurable
 - [ ] Publicize it

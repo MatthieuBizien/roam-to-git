@@ -11,7 +11,7 @@ def read_markdown_directory(raw_directory: Path) -> Dict[str, str]:
     for file in raw_directory.iterdir():
         if file.is_dir():
             # We recursively add the content of sub-directories.
-            # They exists when there is a / in the note name.
+            # They exist when there is a / in the note name.
             for child_name, content in read_markdown_directory(file).items():
                 contents[f"{file.name}/{child_name}"] = content
         if not file.is_file():
@@ -38,8 +38,8 @@ def format_markdown(contents: Dict[str, str]) -> Dict[str, str]:
     # Format and write the markdown files
     out = {}
     for file_name, content in contents.items():
-        # We add the backlinks first, because they use the position of the caracters
-        # of the regex matchs
+        # We add the backlinks first, because they use the position of the characters
+        # of the regex matches
         content = add_back_links(content, back_links[file_name])
 
         # Format content. Backlinks content will be formatted automatically.
