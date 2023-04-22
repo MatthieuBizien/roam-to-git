@@ -63,7 +63,15 @@ def main():
                              "directory will be converted to a formatted directory skipping "
                              "fetching entirely. Also note that if jet is installed, the edn "
                              "output will be pretty printed allowing for cleaner git diffs.")
+    parser.add_argument("--version", action="store_true",
+                        help="Show roam-to-git version and exit.")
     args = parser.parse_args()
+
+    if args.version:
+        import pkg_resources
+        version = pkg_resources.get_distribution('roam-to-git').version
+        print("Roam-to-git version", version)
+        sys.exit()
 
     if args.directory is None:
         git_path = Path("notes").absolute()

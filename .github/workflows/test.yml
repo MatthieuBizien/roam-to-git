@@ -30,8 +30,7 @@ jobs:
     - name: Setup dependencies
       run: |
         python --version
-        python -m pip install -r requirements.txt
-        python -m pip install mypy
+        python -m pip install .[test]
 
     - name: Run backup
       run: ./tests.py
