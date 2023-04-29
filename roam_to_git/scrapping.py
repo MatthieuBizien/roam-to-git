@@ -10,6 +10,7 @@ import psutil
 from loguru import logger
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from webdriver_manager.firefox import GeckoDriverManager
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 
 ROAM_FORMATS = ("json", "markdown", "edn")
@@ -20,7 +21,7 @@ class Browser:
     PHANTOMJS = "PhantomJS"
     CHROME = "Chrome"
 
-    def __init__(self, browser, output_directory, headless=True, debug=False):
+    def __init__(self, browser, browser_path, output_directory, headless=True, debug=False):
         if browser == Browser.FIREFOX:
             logger.trace("Configure Firefox Profile Firefox")
             firefox_profile = webdriver.FirefoxProfile()
@@ -28,19 +29,30 @@ class Browser:
             firefox_profile.set_preference("browser.download.folderList", 2)
             firefox_profile.set_preference("browser.download.manager.showWhenStarting", False)
             firefox_profile.set_preference("browser.download.dir", str(output_directory))
-            firefox_profile.set_preference(
-                "browser.helperApps.neverAsk.saveToDisk", "application/zip")
+            firefox_profile.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/zip")
 
             logger.trace("Configure Firefox Profile Options")
             firefox_options = webdriver.FirefoxOptions()
+
             if headless:
                 logger.trace("Set Firefox as headless")
                 firefox_options.headless = True
 
             logger.trace("Start Firefox")
-            self.browser = webdriver.Firefox(firefox_profile=firefox_profile,
-                                             firefox_options=firefox_options,
-                                             service_log_path=os.devnull)
+
+            if browser_path:
+                self.browser = webdriver.Firefox(executable_path=GeckoDriverManager().install(),
+                                firefox_binary=rf"{browser_path}",
+                                firefox_profile=firefox_profile,
+                                firefox_options=firefox_options,
+                                service_log_path=os.devnull)
+
+            else:
+                self.browser = webdriver.Firefox(executable_path=GeckoDriverManager().install(),
+                                                firefox_profile=firefox_profile,
+                                                firefox_options=firefox_options,
+                                                service_log_path=os.devnull)
+            
         elif browser == Browser.PHANTOMJS:
             raise NotImplementedError()
             # TODO configure
@@ -123,7 +135,8 @@ class Config:
                  debug: bool,
                  gui: bool,
                  sleep_duration: float = 2.,
-                 browser_args: Optional[List[str]] = None):
+                 browser_args: Optional[List[str]] = None,
+                 browser_path: Optional[str] = None):
         self.user = os.environ["ROAMRESEARCH_USER"]
         self.password = os.environ["ROAMRESEARCH_PASSWORD"]
         assert self.user
@@ -138,6 +151,7 @@ class Config:
         self.sleep_duration = sleep_duration
         self.browser = getattr(Browser, browser.upper())
         self.browser_args = (browser_args or [])
+        self.browser_path: Optional[str] = browser_path
 
 
 def download_rr_archive(output_type: str,
@@ -147,9 +161,13 @@ def download_rr_archive(output_type: str,
                         ):
     logger.debug("Creating browser")
     browser = Browser(browser=config.browser,
+                      browser_path=config.browser_path,
                       headless=not config.gui,
                       debug=config.debug,
                       output_directory=output_directory)
+    
+    if browser:
+        logger.debug("Created Browser")
 
     if config.debug:
         pass
@@ -272,11 +290,14 @@ def signin(browser: Browser, config: Config, sleep_duration=1.):
 
             logger.debug("Activating sign-in")
             passwd_elem.send_keys(Keys.RETURN)
+            logger.debug("Sign in success")
             break
         except NoSuchElementException:
+            logger.debug("Sign In Failed")
             logger.trace("NoSuchElementException: Retry getting the email field")
             time.sleep(1)
         except StaleElementReferenceException:
+            logger.debug("Sign In Failed")
             logger.trace("StaleElementReferenceException: Retry getting the email field")
             time.sleep(1)
 
