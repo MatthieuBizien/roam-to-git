@@ -93,6 +93,10 @@ git push --set-upstream origin master
 
 If the backup does not automatically start, try pushing to the repository again
 
+# Use with GitLab CI
+
+Check the original repo [README file](https://github.com/MatthieuBizien/roam-to-git/blob/master/README.md)
+
 # Use it locally
 
 **Note**: if your file system is not case-sensitive, you will not backup notes that have the same name in different 
