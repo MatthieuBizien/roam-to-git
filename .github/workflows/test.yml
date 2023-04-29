@@ -27,6 +27,14 @@ jobs:
       with:
         python-version: ${{ matrix.python }}
 
+    - name: Setup firefox
+      uses: browser-actions/setup-firefox@v1
+      with:
+        firefox-version: latest
+    - run: |
+        echo Installed firefox versions: ${{ steps.setup-firefox.outputs.firefox-version }}
+        firefox --version
+
     - name: Setup dependencies
       run: |
         python --version
