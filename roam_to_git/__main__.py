@@ -57,6 +57,8 @@ def main():
     parser.add_argument("--browser-arg",
                         help="Flags to pass through to launched browser.",
                         action='append')
+    parser.add_argument("--browser-path", default=None, nargs="*", type=str,
+                        help="Specifies the path to the browser")
     parser.add_argument("--formats", "-f", action=ExtendAction, nargs="+", type=str,
                         help="Which formats to save. Options include json, markdown, formatted, "
                              "and edn. Note that if only formatted is specified, the markdown "
@@ -64,6 +66,7 @@ def main():
                              "fetching entirely. Also note that if jet is installed, the edn "
                              "output will be pretty printed allowing for cleaner git diffs.")
     args = parser.parse_args()
+    
 
     if args.directory is None:
         git_path = Path("notes").absolute()
@@ -84,7 +87,8 @@ def main():
                     gui=args.gui,
                     sleep_duration=float(args.sleep_duration),
                     browser=args.browser,
-                    browser_args=args.browser_arg)
+                    browser_args=args.browser_arg,
+                    browser_path=" ".join(args.browser_path))
 
     if args.skip_git:
         repo = None
