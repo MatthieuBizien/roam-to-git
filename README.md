@@ -1,6 +1,7 @@
 # Automatic RoamResearch backup
 
 [![Roam Research backup](https://github.com/caffo/roam-to-git-demo/workflows/Roam%20Research%20backup/badge.svg)](https://github.com/caffo/roam-to-git-demo/actions)
+[![roam-to-git tests.py](https://github.com/caffo/roam-to-git/workflows/roam-to-git%20tests.py/badge.svg)](https://github.com/caffo/roam-to-git/actions)
 
 This script helps you backup your [RoamResearch](https://roamresearch.com/) graphs!
 
