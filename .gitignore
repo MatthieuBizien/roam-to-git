@@ -10,3 +10,4 @@ MANIFEST
 dist/
 *.ipynb
 *.log
+run_main.py
