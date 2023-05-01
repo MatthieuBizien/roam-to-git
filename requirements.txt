@@ -6,3 +6,4 @@ python-dotenv==1.0.0
 psutil==5.9.5
 selenium==3.141.0
 webdriver_manager==3.8.6
+mypy==1.2.0
