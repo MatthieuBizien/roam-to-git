@@ -29,7 +29,10 @@ class Browser:
             firefox_profile.set_preference("browser.download.folderList", 2)
             firefox_profile.set_preference("browser.download.manager.showWhenStarting", False)
             firefox_profile.set_preference("browser.download.dir", str(output_directory))
-            firefox_profile.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/zip")
+            firefox_profile.set_preference(
+                "browser.helperApps.neverAsk.saveToDisk",
+                "application/zip"
+                )
 
             logger.trace("Configure Firefox Profile Options")
             firefox_options = webdriver.FirefoxOptions()
@@ -42,17 +45,15 @@ class Browser:
 
             if browser_path:
                 self.browser = webdriver.Firefox(executable_path=GeckoDriverManager().install(),
-                                firefox_binary=rf"{browser_path}",
-                                firefox_profile=firefox_profile,
-                                firefox_options=firefox_options,
-                                service_log_path=os.devnull)
-
+                                                 firefox_binary=rf"{browser_path}",
+                                                 firefox_profile=firefox_profile,
+                                                 firefox_options=firefox_options,
+                                                 service_log_path=os.devnull)
             else:
                 self.browser = webdriver.Firefox(executable_path=GeckoDriverManager().install(),
-                                                firefox_profile=firefox_profile,
-                                                firefox_options=firefox_options,
-                                                service_log_path=os.devnull)
-            
+                                                 firefox_profile=firefox_profile,
+                                                 firefox_options=firefox_options,
+                                                 service_log_path=os.devnull)
         elif browser == Browser.PHANTOMJS:
             raise NotImplementedError()
             # TODO configure
@@ -165,7 +166,6 @@ def download_rr_archive(output_type: str,
                       headless=not config.gui,
                       debug=config.debug,
                       output_directory=output_directory)
-    
     if browser:
         logger.debug("Created Browser")
 

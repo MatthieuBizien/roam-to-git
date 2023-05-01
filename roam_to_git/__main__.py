@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import re
 import os
 import sys
 import time
@@ -66,7 +67,6 @@ def main():
                              "fetching entirely. Also note that if jet is installed, the edn "
                              "output will be pretty printed allowing for cleaner git diffs.")
     args = parser.parse_args()
-    
 
     if args.directory is None:
         git_path = Path("notes").absolute()
@@ -82,13 +82,32 @@ def main():
         logger.error("Please define ROAMRESEARCH_USER and ROAMRESEARCH_PASSWORD, "
                      "in the .env file of your notes repository, or in environment variables")
         sys.exit(1)
+
+    if args.browser_path is None:
+        dir_files = os.listdir(os.curdir)
+        has_firefox = [re.findall('firefox', filename.lower()) for filename in dir_files]
+        has_chrome = [re.findall('chrome', filename.lower()) for filename in dir_files]
+        if any(has_firefox):
+            result = has_firefox
+        elif (any(has_chrome)):
+            result = has_chrome
+        else:
+            if args.debug:
+                logger.debug("use --browser-path <browser_path> to specify a browser path")
+            logger.error("Please specify a firefox/chrome browser path")
+            sys.exit(1)
+        if result:
+            for i, j in enumerate(result):
+                if j != []:
+                    BROWSER_PATH = f"./{dir_files[i]}"
+
     config = Config(database=args.database,
                     debug=args.debug,
                     gui=args.gui,
                     sleep_duration=float(args.sleep_duration),
                     browser=args.browser,
                     browser_args=args.browser_arg,
-                    browser_path=" ".join(args.browser_path))
+                    browser_path=BROWSER_PATH)
 
     if args.skip_git:
         repo = None
