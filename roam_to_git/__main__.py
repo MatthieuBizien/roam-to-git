@@ -67,7 +67,6 @@ def main():
                              "fetching entirely. Also note that if jet is installed, the edn "
                              "output will be pretty printed allowing for cleaner git diffs.")
     args = parser.parse_args()
-    
 
     if args.directory is None:
         git_path = Path("notes").absolute()
@@ -84,13 +83,13 @@ def main():
                      "in the .env file of your notes repository, or in environment variables")
         sys.exit(1)
 
-    if args.browser_path == None:
+    if args.browser_path is None:
         dir_files = os.listdir(os.curdir)
         has_firefox = [re.findall('firefox', filename.lower()) for filename in dir_files]
         has_chrome = [re.findall('chrome', filename.lower()) for filename in dir_files]
         if any(has_firefox):
             result = has_firefox
-        elif(any(has_chrome)):
+        elif (any(has_chrome)):
             result = has_chrome
         else:
             if args.debug:
@@ -98,10 +97,9 @@ def main():
             logger.error("Please specify a firefox/chrome browser path")
             sys.exit(1)
         if result:
-            for i,j in enumerate(result):
+            for i, j in enumerate(result):
                 if j != []:
                     BROWSER_PATH = f"./{dir_files[i]}"
-
 
     config = Config(database=args.database,
                     debug=args.debug,
