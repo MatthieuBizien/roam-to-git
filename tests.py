@@ -114,6 +114,7 @@ class TestExtractLinks(unittest.TestCase):
 
 class TestMypy(unittest.TestCase):
     def _test_mypy(self, files: List[str]):
+        print(files)
         stdout, stderr, exit_status = mypy.api.run(["--ignore-missing-imports", *files])
         self.assertEqual(exit_status, 0)
 
