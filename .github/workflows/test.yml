@@ -42,6 +42,4 @@ jobs:
         python -m pip install mypy
 
     - name: Run backup
-      run: |
-        ls -l ./tests.py
-        ./tests.py
+      run: ./tests.py
