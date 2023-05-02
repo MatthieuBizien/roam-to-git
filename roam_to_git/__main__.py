@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import argparse
-import re
 import os
 import sys
 import time
@@ -84,23 +83,28 @@ def main():
         sys.exit(1)
 
     if args.browser_path is None:
+        logger.debug("Running auto detect browser")
         dir_files = os.listdir(os.curdir)
-        has_firefox = [re.findall('firefox', filename.lower()) for filename in dir_files]
-        has_chrome = [re.findall('chrome', filename.lower()) for filename in dir_files]
-        if any(has_firefox):
-            result = has_firefox
-        elif (any(has_chrome)):
-            result = has_chrome
+        has_firefox = [filename for filename in dir_files if 'firefox' in str(filename.lower())]
+        has_chrome = [filename for filename in dir_files if 'chrome' in str(filename.lower())]
+        if has_firefox:
+            logger.debug("Browser detected in current directory")
+            BROWSER_PATH = f"./{has_firefox[0]}"
+        elif has_chrome:
+            logger.debug("Browser detected in current directory")
+            BROWSER_PATH = f"./{has_chrome[0]}"
         else:
             if args.debug:
-                logger.debug("use --browser-path <browser_path> to specify a browser path")
-            logger.error("Please specify a firefox/chrome browser path")
+                logger.debug(
+                    """No browser detected, specify a browser with --browser-path <browser_path>""")
+            else:
+                logger.error("No browser detected in current directory")
             sys.exit(1)
-        if result:
-            for i, j in enumerate(result):
-                if j != []:
-                    BROWSER_PATH = f"./{dir_files[i]}"
-
+    else:
+        BROWSER_PATH = " ".join(args.browser_path)
+        if BROWSER_PATH == "":
+            logger.debug("Browser path value missing specify using --browser-path <browser_path>")
+            sys.exit(1)
     config = Config(database=args.database,
                     debug=args.debug,
                     gui=args.gui,
