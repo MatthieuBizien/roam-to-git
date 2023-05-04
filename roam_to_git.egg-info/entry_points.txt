@@ -1,2 +1,0 @@
-[console_scripts]
-roam-to-git = roam_to_git.__main__:main
