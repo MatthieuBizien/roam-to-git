@@ -302,8 +302,7 @@ def signin(browser: Browser, config: Config, sleep_duration=1.):
             logger.trace("StaleElementReferenceException: Retry getting the email field")
             time.sleep(1)
     else:
-        logger.debug("Sign in attempt exceeded 5")
-        sys.exit(1)
+        raise ConnectionError("Sign in attempt exceeded 5")
 
 
 def go_to_database(browser, database):
