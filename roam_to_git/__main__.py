@@ -84,7 +84,7 @@ def main():
 
     if args.browser_path is None:
         logger.debug("Running auto detect browser")
-        dir_files = os.listdir(os.curdir)
+        dir_files = os.listdir(git_path)
         has_firefox = [filename for filename in dir_files if 'firefox' in str(filename.lower())]
         has_chrome = [filename for filename in dir_files if 'chrome' in str(filename.lower())]
         if has_firefox:
