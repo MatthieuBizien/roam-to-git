@@ -267,11 +267,12 @@ def _download_rr_archive(browser: Browser,
 
 def signin(browser: Browser, config: Config, sleep_duration=1.):
     """Sign-in into Roam"""
+    sign_in_counter = 0
     logger.debug("Opening signin page")
     browser.get('https://roamresearch.com/#/signin')
 
     logger.debug("Waiting for  email and password fields", config.user)
-    while True:
+    while sign_in_counter < 5:
         try:
             email_elem = browser.find_element_by_css_selector("input[name='email']", check=False)
             passwd_elem = browser.find_element_by_css_selector("input[name='password']")
@@ -300,6 +301,8 @@ def signin(browser: Browser, config: Config, sleep_duration=1.):
             logger.debug("Sign In Failed")
             logger.trace("StaleElementReferenceException: Retry getting the email field")
             time.sleep(1)
+    else:
+        raise ConnectionError("Sign in attempt exceeded 5")
 
 
 def go_to_database(browser, database):
