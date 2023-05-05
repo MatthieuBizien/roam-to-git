@@ -83,23 +83,12 @@ def main():
         sys.exit(1)
 
     if args.browser_path is None:
-        logger.debug("Running auto detect browser")
-        dir_files = os.listdir(os.curdir)
-        has_firefox = [filename for filename in dir_files if 'firefox' in str(filename.lower())]
-        has_chrome = [filename for filename in dir_files if 'chrome' in str(filename.lower())]
-        if has_firefox:
-            logger.debug("Browser detected in current directory")
-            BROWSER_PATH = f"./{has_firefox[0]}"
-        elif has_chrome:
-            logger.debug("Browser detected in current directory")
-            BROWSER_PATH = f"./{has_chrome[0]}"
+        if args.debug:
+            logger.debug(
+                """No browser specified, specify a browser with --browser-path <browser_path>""")
         else:
-            if args.debug:
-                logger.debug(
-                    """No browser detected, specify a browser with --browser-path <browser_path>""")
-            else:
-                logger.error("No browser detected in current directory")
-            sys.exit(1)
+            logger.error("No browser specified")
+        sys.exit(1)
     else:
         BROWSER_PATH = " ".join(args.browser_path)
         if BROWSER_PATH == "":
