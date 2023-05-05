@@ -42,18 +42,12 @@ class Browser:
                 firefox_options.headless = True
 
             logger.trace("Start Firefox")
+            self.browser = webdriver.Firefox(executable_path=GeckoDriverManager().install(),
+                                             firefox_binary=rf"{browser_path}",
+                                             firefox_profile=firefox_profile,
+                                             firefox_options=firefox_options,
+                                             service_log_path=os.devnull)
 
-            if browser_path:
-                self.browser = webdriver.Firefox(executable_path=GeckoDriverManager().install(),
-                                                 firefox_binary=rf"{browser_path}",
-                                                 firefox_profile=firefox_profile,
-                                                 firefox_options=firefox_options,
-                                                 service_log_path=os.devnull)
-            else:
-                self.browser = webdriver.Firefox(executable_path=GeckoDriverManager().install(),
-                                                 firefox_profile=firefox_profile,
-                                                 firefox_options=firefox_options,
-                                                 service_log_path=os.devnull)
         elif browser == Browser.PHANTOMJS:
             raise NotImplementedError()
             # TODO configure
