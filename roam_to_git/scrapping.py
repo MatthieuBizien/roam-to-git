@@ -39,8 +39,8 @@ class Browser:
 
             logger.trace("Start Firefox")
             self.browser = webdriver.Firefox(firefox_profile=firefox_profile,
-                                             firefox_options=firefox_options,
-                                             service_log_path=os.devnull)
+                                             firefox_options=firefox_options)
+
         elif browser == Browser.PHANTOMJS:
             raise NotImplementedError()
             # TODO configure
