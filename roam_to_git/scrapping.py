@@ -54,7 +54,6 @@ class Browser:
                                                  firefox_profile=firefox_profile,
                                                  firefox_options=firefox_options,
                                                  service_log_path=os.devnull)
-                
         elif browser == Browser.PHANTOMJS:
             raise NotImplementedError()
             # TODO configure
@@ -302,9 +301,6 @@ def signin(browser: Browser, config: Config, sleep_duration=1.):
             logger.debug("Sign In Failed")
             logger.trace("StaleElementReferenceException: Retry getting the email field")
             time.sleep(1)
-    else:
-        logger.debug("")
-        sys.exit(1)
 
 
 def go_to_database(browser, database):
