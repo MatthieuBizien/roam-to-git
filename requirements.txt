@@ -2,6 +2,6 @@
 gitpython==3.1.20
 loguru==0.4.1
 pathvalidate==2.5.2
-python-dotenv==0.21.1
+python-dotenv==0.20
 psutil==5.9.5
 selenium==3.13.0
