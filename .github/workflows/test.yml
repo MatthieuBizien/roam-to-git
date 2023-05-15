@@ -8,7 +8,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ macos-latest, ubuntu-latest, windows-latest]
+        os: [ macos-latest, ubuntu-20.04, windows-latest]
         python: [ 3.6, 3.7, 3.8, 3.9 ]
 
     env:
@@ -20,10 +20,10 @@ jobs:
     timeout-minutes: 15
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3.5.2
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4.6.0
       with:
         python-version: ${{ matrix.python }}
 

@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
+import os
 import unittest
-from pathlib import Path
-from typing import List
-
 import mypy.api
+from typing import List
 
 from roam_to_git.formatter import extract_links, format_link, format_to_do
 
@@ -124,8 +123,9 @@ class TestMypy(unittest.TestCase):
         self._test_mypy(["roam_to_git", "tests.py"])
 
     def test_mypy_all(self):
-        self._test_mypy([str(f) for f in Path(__file__).parent.iterdir()
-                         if f.is_file() and f.name.endswith(".py")])
+        self._test_mypy([str(f) for f in os.listdir(".")
+                         if os.path.isfile(f) and f.endswith(".py")
+                         and not f.startswith("setup")])
 
 
 if __name__ == "__main__":
