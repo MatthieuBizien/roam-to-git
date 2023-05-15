@@ -1,7 +1,7 @@
 # WARNING: don't forget to update setup.py
-gitpython>=3.1.*
-loguru==0.4.*
-pathvalidate==2.*
-python-dotenv>=0.10.*
-psutil>=5.6.0
-selenium==3.*
+gitpython==3.1.20
+loguru==0.4.1
+pathvalidate==2.5.2
+python-dotenv==0.20
+psutil==5.9.5
+selenium==3.13.0
