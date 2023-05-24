@@ -1,4 +1,5 @@
 import atexit
+import platform
 import os
 import pdb
 import sys
@@ -23,13 +24,25 @@ class Browser:
     def __init__(self, browser, output_directory, headless=True, debug=False):
         if browser == Browser.FIREFOX:
             logger.trace("Configure Firefox Profile Firefox")
-            firefox_profile = webdriver.FirefoxProfile()
+            if platform.system() == "Linux":
+                profile_home = Path.home() / ".mozilla" / "firefox" / "hfoo2h79.default"
+            elif platform.system() == "Darwin":
+                profile_home = Path.home() / "Library" / "Application Support" / "Firefox" / "Profiles" / "hfoo2h79.default"
+            elif platform.system() == "Windows":
+                profile_home = Path.home() / "AppData" / "Roaming" / "Mozilla" / "Firefox" / "Profiles" / "hfoo2h79.default"
+            else:
+                raise NotImplementedError(f"Platform {platform.system()} not supported")
+            profile_home.mkdir(parents=True, exist_ok=True)
+            firefox_profile = webdriver.FirefoxProfile(str(profile_home))
 
-            firefox_profile.set_preference("browser.download.folderList", 2)
-            firefox_profile.set_preference("browser.download.manager.showWhenStarting", False)
-            firefox_profile.set_preference("browser.download.dir", str(output_directory))
-            firefox_profile.set_preference(
-                "browser.helperApps.neverAsk.saveToDisk", "application/zip")
+            # firefox_profile.set_preference("browser.download.folderList", 2)
+            # firefox_profile.set_preference("browser.download.manager.showWhenStarting", False)
+            # firefox_profile.set_preference("browser.download.dir", str(output_directory))
+            # firefox_profile.set_preference(
+            #     "browser.helperApps.neverAsk.saveToDisk", "application/zip")
+            firefox_profile.set_preference("dom.webdriver.enabled", False)
+            firefox_profile.set_preference('useAutomationExtension', False)
+            firefox_profile.update_preferences()
 
             logger.trace("Configure Firefox Profile Options")
             firefox_options = webdriver.FirefoxOptions()
@@ -39,7 +52,9 @@ class Browser:
 
             logger.trace("Start Firefox")
             self.browser = webdriver.Firefox(firefox_profile=firefox_profile,
-                                             firefox_options=firefox_options)
+                                             desired_capabilities=webdriver.DesiredCapabilities.FIREFOX,
+                                             firefox_options=firefox_options,
+                                             )
         elif browser == Browser.PHANTOMJS:
             raise NotImplementedError()
             # TODO configure
@@ -74,6 +89,8 @@ class Browser:
 
     def find_element_by_link_text(self, text) -> "HTMLElement":
         elements = self.browser.find_elements_by_link_text(text)
+        if not elements:
+            raise NoSuchElementException(f"Could not find element with text {text}")
         if len(elements) != 1:
             if self.debug:
                 pdb.set_trace()
@@ -175,7 +192,8 @@ def _download_rr_archive(browser: Browser,
     :param output_type: Download JSON or Markdown or EDN
     :param output_directory: Directory where to stock the outputs
     """
-    signin(browser, config, sleep_duration=config.sleep_duration)
+    # signin(browser, config, sleep_duration=config.sleep_duration)
+    google_signin(browser, config, sleep_duration=config.sleep_duration)
 
     if config.database:
         go_to_database(browser, config.database)
@@ -278,6 +296,49 @@ def signin(browser: Browser, config: Config, sleep_duration=1.):
         except StaleElementReferenceException:
             logger.trace("StaleElementReferenceException: Retry getting the email field")
             time.sleep(1)
+
+
+def google_signin(browser: Browser, config: Config, sleep_duration=1.):
+    """Sign-in into Roam"""
+    logger.debug("Opening signin page")
+    browser.get('https://roamresearch.com/#/signin')
+    while True:
+        for _ in range(10):
+            if "accounts.google.com" in browser.browser.current_url:
+                break
+            time.sleep(sleep_duration)
+            try:
+                google_auth = browser.find_element_by_link_text("Google")
+            except NoSuchElementException:
+                continue
+            logger.debug("Click on Google auth")
+            google_auth.click()
+    
+        assert "accounts.google.com" in browser.browser.current_url, browser.browser.current_url
+
+        for _ in range(10):
+            time.sleep(sleep_duration)
+            try:
+                button_identifier_id = browser.find_element_by_css_selector("#identifierId")
+                break
+            except NoSuchElementException:
+                continue
+        
+        logger.debug("Fill email '{}'", config.user)
+        button_identifier_id.send_keys(config.user)
+        for text in ["Suivant", "Next"]:
+            try:
+                # Button_next is just a span containing the text "Next"
+                button_next = browser.browser.find_element_by_xpath(f"//span[contains(text(), '{text}')]")
+            except NoSuchElementException:
+                continue
+            button_next.click()
+            time.sleep(sleep_duration)
+            break
+    
+    # I'm stuck here, because Google refuse to continue (untrusted device)
+    raise NotImplementedError("TODO: Finish the google signin")
+
 
 
 def go_to_database(browser, database):
