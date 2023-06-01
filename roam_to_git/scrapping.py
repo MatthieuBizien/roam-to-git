@@ -123,8 +123,21 @@ class Config:
                  gui: bool,
                  sleep_duration: float = 2.,
                  browser_args: Optional[List[str]] = None):
-        self.user = os.environ["ROAMRESEARCH_USER"]
-        self.password = os.environ["ROAMRESEARCH_PASSWORD"]
+		user_var_key = "ROAMRESEARCH_USER"
+		password_var_key = "ROAMRESEARCH_PASSWORD"
+		missing_env_vars = []
+		for var in [user_var_key, password_var_key]:
+			if not os.environ[var]
+			missing_env_vars.append(var)
+
+		for miss in missing_env_vars:
+			print(f"env variable {miss} missing.")
+
+		if len(missing_env_vars)
+			raise
+
+        self.user = os.environ[user_var_key]
+        self.password = os.environ[password_var_key]
         assert self.user
         assert self.password
         if database:
