@@ -138,13 +138,13 @@ class Config:
         self.browser = getattr(Browser, browser.upper())
         self.browser_args = (browser_args or [])
 
-
 def download_rr_archive(output_type: str,
                         output_directory: Path,
                         config: Config,
                         slow_motion=10,
                         ):
     logger.debug("Creating browser")
+
     browser = Browser(browser=config.browser,
                       headless=not config.gui,
                       debug=config.debug,
@@ -182,7 +182,7 @@ def _download_rr_archive(browser: Browser,
 
     logger.debug("Wait for interface to load")
     dot_button = None
-    for _ in range(100):
+    for _ in range(40):
         # Starting is a little bit slow, so we wait for the button that signal it's ok
         time.sleep(config.sleep_duration)
         try:
@@ -201,8 +201,8 @@ def _download_rr_archive(browser: Browser,
             logger.error(
                 "You seems to have multiple databases. Please select it with the option "
                 "--database")
-            sys.exit(1)
-
+            sys.exit(1) 
+    # await document.screenshot({'path': '/tmp/wait_for_interface_{}.png'.format(output_type)  })
     assert dot_button is not None, "All roads leads to Roam, but that one is too long. Try " \
                                    "again when Roam servers are faster."
 
