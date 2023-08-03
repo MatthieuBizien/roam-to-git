@@ -1,6 +1,6 @@
 # WARNING: don't forget to update setup.py
 gitpython==3.1.20
-loguru==0.4.1
+loguru==0.5.3
 pathvalidate==2.5.2
 python-dotenv==0.20
 psutil==5.9.5
