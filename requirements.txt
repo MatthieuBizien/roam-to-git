@@ -1,5 +1,5 @@
 # WARNING: don't forget to update setup.py
-gitpython==3.1.20
+gitpython==3.1.32
 loguru==0.4.1
 pathvalidate==2.5.2
 python-dotenv==0.20
