@@ -3,6 +3,7 @@ import argparse
 import os
 import sys
 import time
+import shutil
 from pathlib import Path
 
 import git
@@ -115,8 +116,11 @@ def main():
                 return
             # Unzip and save all the downloaded files.
             for f in roam_formats:
-                unzip_and_save_archive(f, root_zip_path / f, git_path / f)
-
+                if (f == "markdown") or (f == "formatted"):
+                    logger.debug("Unzipping and saving {}", f)
+                    unzip_and_save_archive(f, root_zip_path / f, git_path / f)
+                else:
+                    shutil.copytree(root_zip_path / f, git_path / f, dirs_exist_ok=True)
     if "formatted" in args.formats:
         formatted = format_markdown(read_markdown_directory(git_path / "markdown"))
         save_files("formatted", git_path / "formatted", formatted)

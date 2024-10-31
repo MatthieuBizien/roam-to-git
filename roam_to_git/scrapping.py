@@ -40,6 +40,7 @@ class Browser:
             logger.trace("Start Firefox")
             self.browser = webdriver.Firefox(firefox_profile=firefox_profile,
                                              firefox_options=firefox_options)
+
         elif browser == Browser.PHANTOMJS:
             raise NotImplementedError()
             # TODO configure
@@ -238,7 +239,7 @@ def _download_rr_archive(browser: Browser,
         if i % 60 == 0:
             logger.debug("Keep waiting for {}, {}s elapsed", output_type, i)
         for file in output_directory.iterdir():
-            if file.name.endswith(".zip"):
+            if file.name.endswith(".zip") or file.name.endswith(output_type.lower()):
                 logger.debug("File {} found for {}", file, output_type)
                 time.sleep(1)
                 return
